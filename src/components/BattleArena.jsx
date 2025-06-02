@@ -1,8 +1,27 @@
 // BattleArena.jsx
 import React, { useState, useEffect } from "react";
 import CombatSceneWrapper from "./CombatSceneWrapper";
+import CharacterList from "./CharacterList"; // 추가
+import CharacterForm from "./CharacterForm"; // 새 캐릭터 생성 폼
+import { Menu } from "lucide-react";
 
 const equipmentTypes = ["무기", "모자", "상의", "신발"];
+
+const defaultStats = {
+  hp: 100,
+  attack: 20,
+  defense: 10,
+  speed: 50,
+  criticalChance: 0.1,
+  criticalDamage: 1.5,
+  dodgeChance: 0.05,
+  accuracy: 0.9,
+  level: 1,
+  exp: 0,
+  maxExp: 100,
+  wins: 0,
+  losses: 0
+};
 
 export default function BattleArena({ player, onStartCombat }) {
   const [opponent, setOpponent] = useState(null);
@@ -11,6 +30,9 @@ export default function BattleArena({ player, onStartCombat }) {
   const [searchTime, setSearchTime] = useState(0);
   const [equipped, setEquipped] = useState({});
   const [showEquipModal, setShowEquipModal] = useState(null);
+  const [showCharacterList, setShowCharacterList] = useState(false);
+  const [showCharacterForm, setShowCharacterForm] = useState(false);
+  const [currentPlayer, setCurrentPlayer] = useState(player);
 
   const handleFindOpponent = () => {
     setMatchmakingPhase("searching");
@@ -42,33 +64,65 @@ export default function BattleArena({ player, onStartCombat }) {
     if (onStartCombat) onStartCombat(winner, battleResult);
   };
 
+  if (showCharacterForm) {
+    return <CharacterForm onSubmit={(newChar) => {
+      const fullChar = { ...defaultStats, ...newChar };
+      setCurrentPlayer(fullChar);
+      setShowCharacterForm(false);
+    }} />;
+  }
+
+  if (showCharacterList) {
+    return <CharacterList
+      onBack={() => setShowCharacterList(false)}
+      onSelect={(char) => {
+        setCurrentPlayer(char);
+        setShowCharacterList(false);
+      }}
+      onCreate={() => {
+        setShowCharacterList(false);
+        setShowCharacterForm(true);
+      }}
+    />;
+  }
+
   if (showCombat && opponent) {
-    return <CombatSceneWrapper player={player} opponent={opponent} onBattleEnd={handleBattleEnd} />;
+    return <CombatSceneWrapper player={currentPlayer} opponent={opponent} onBattleEnd={handleBattleEnd} />;
   }
 
   return (
     <div className="w-full max-w-6xl mx-auto px-6 py-6 min-h-screen text-white">
+      {/* Header with hamburger */}
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={() => setShowCharacterList(true)}
+          className="text-white p-2 rounded-xl hover:bg-white/20 transition"
+        >
+          <Menu size={24} />
+        </button>
+      </div>
+
       {/* Player Info + Stats */}
       <div className="bg-white/10 backdrop-blur-xl p-6 rounded-3xl shadow-2xl border border-white/20 mb-6">
         <div className="flex justify-between items-start mb-4">
           <div>
-            <h3 className="text-2xl font-black mb-1">{player.name}</h3>
-            <span className="text-lg font-medium text-blue-300">Lv.{player.level} • {player.desc} • 실버 III</span>
+            <h3 className="text-2xl font-black mb-1">{currentPlayer.name}</h3>
+            <span className="text-lg font-medium text-blue-300">Lv.{currentPlayer.level} • {currentPlayer.desc} • 실버 III</span>
           </div>
           <div className="text-right">
             <div className="text-sm text-slate-300">전적</div>
-            <div className="text-lg font-bold">{player.wins}승 {player.losses}패</div>
+            <div className="text-lg font-bold">{currentPlayer.wins}승 {currentPlayer.losses}패</div>
           </div>
         </div>
         <div className="mb-3">
           <div className="text-xs text-slate-300 mb-1 flex justify-between">
             <span>경험치</span>
-            <span>{player.exp} / {player.maxExp} XP</span>
+            <span>{currentPlayer.exp} / {currentPlayer.maxExp} XP</span>
           </div>
           <div className="w-full bg-slate-700/50 rounded-full h-2">
             <div
               className="bg-gradient-to-r from-yellow-400 to-green-400 h-2 rounded-full"
-              style={{ width: `${(player.exp / player.maxExp) * 100}%` }}
+              style={{ width: `${(currentPlayer.exp / currentPlayer.maxExp) * 100}%` }}
             />
           </div>
         </div>
@@ -76,14 +130,14 @@ export default function BattleArena({ player, onStartCombat }) {
         {/* Stat Grid */}
         <div className="grid grid-cols-4 gap-2 text-xs">
           {[
-            { icon: "❤️", label: "체력", value: player.hp },
-            { icon: "⚔️", label: "공격", value: player.attack },
-            { icon: "🛡️", label: "방어", value: player.defense },
-            { icon: "💨", label: "속도", value: player.speed },
-            { icon: "💥", label: "치명타", value: `${Math.round(player.criticalChance * 100)}%` },
-            { icon: "⚡", label: "치명피해", value: `${player.criticalDamage}x` },
-            { icon: "🌪️", label: "회피", value: `${Math.round(player.dodgeChance * 100)}%` },
-            { icon: "🎯", label: "정확도", value: `${Math.round(player.accuracy * 100)}%` },
+            { icon: "❤️", label: "체력", value: currentPlayer.hp },
+            { icon: "⚔️", label: "공격", value: currentPlayer.attack },
+            { icon: "🛡️", label: "방어", value: currentPlayer.defense },
+            { icon: "💨", label: "속도", value: currentPlayer.speed },
+            { icon: "💥", label: "치명타", value: `${Math.round(currentPlayer.criticalChance * 100)}%` },
+            { icon: "⚡", label: "치명피해", value: `${currentPlayer.criticalDamage}x` },
+            { icon: "🌪️", label: "회피", value: `${Math.round(currentPlayer.dodgeChance * 100)}%` },
+            { icon: "🎯", label: "정확도", value: `${Math.round(currentPlayer.accuracy * 100)}%` },
           ].map((stat, i) => (
             <div
               key={i}

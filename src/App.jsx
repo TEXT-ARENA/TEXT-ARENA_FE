@@ -39,7 +39,10 @@ export default function App() {
       </div>
 
       {/* 타이틀 */}
-      <div className="relative z-10 text-center mt-8 mb-4">
+      <div
+        className="relative z-10 text-center mt-8 mb-4 cursor-pointer"
+        onClick={() => setStage(player ? "battle" : "form")}
+      >
         <div className="flex items-center justify-center gap-2 mb-2">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-600 rounded-xl flex items-center justify-center shadow-md animate-bounce">
             <span className="text-lg">⚔️</span>
