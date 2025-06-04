@@ -152,6 +152,7 @@ const CombatScene = ({ player = {}, opponent = {}, onBattleEnd }) => {
   const battleLogRef = useRef([]);
   const [battleLog, setBattleLog] = useState([]);
   const [isBattleOver, setIsBattleOver] = useState(false);
+  const battleOverRef = useRef(false);
   const turnStats = useRef({ totalTurns: 0, totalDamage: 0, criticalHits: 0, dodges: 0, startTime: Date.now() });
 
   const [activeTurn, setActiveTurn] = useState(null);
@@ -167,6 +168,7 @@ const CombatScene = ({ player = {}, opponent = {}, onBattleEnd }) => {
     battleLogRef.current = [];
     setBattleLog([]);
     setIsBattleOver(false);
+    battleOverRef.current = false;
     setPlayerAnimation(null);
     setOpponentAnimation(null);
     setPlayerDamageText(null);
@@ -187,13 +189,13 @@ const CombatScene = ({ player = {}, opponent = {}, onBattleEnd }) => {
   // Effect for managing the game loop (turns)
   useEffect(() => {
     // Only run if battle is ready, activeTurn is set, not over, and characters exist
-    if (!isBattleReady || !activeTurn || isBattleOver || !player.name || !opponent.name) {
+    if (!isBattleReady || !activeTurn || battleOverRef.current || !player.name || !opponent.name) {
       return;
     }
 
     // ... (rest of the game loop useEffect remains the same as your provided version)
     if (playerHP <= 0 || opponentHP <= 0) {
-      if (!isBattleOver) endBattle();
+      if (!battleOverRef.current) endBattle();
       return;
     }
 
@@ -202,7 +204,7 @@ const CombatScene = ({ player = {}, opponent = {}, onBattleEnd }) => {
     const defenderId = activeTurn === 'player' ? 'opponent' : 'player';
 
     const processTurn = async () => {
-      if (isBattleOver) return; 
+      if (battleOverRef.current) return;
 
       turnStats.current.totalTurns++; 
       let logEntry = `${currentAttacker.name} attacks ${currentDefender.name}.`;
@@ -213,9 +215,9 @@ const CombatScene = ({ player = {}, opponent = {}, onBattleEnd }) => {
       if (activeTurn === 'player') setPlayerAnimation({ type: 'attack' });
       else setOpponentAnimation({ type: 'attack' });
       
-      await new Promise(resolve => setTimeout(resolve, 100)); // Attack animation duration (was 100, adjusted to match arm animation)
+      await new Promise(resolve => setTimeout(resolve, 100)); // Attack animation duration
 
-      if (isBattleOver) return; 
+      if (battleOverRef.current) return;
 
       const hitRoll = Math.random();
       const effectiveAccuracy = currentAttacker.accuracy || 0.9; 
@@ -236,12 +238,12 @@ const CombatScene = ({ player = {}, opponent = {}, onBattleEnd }) => {
         setBattleLog([...battleLogRef.current]);
 
         setTimeout(() => {
-          if (isBattleOver) return;
+          if (battleOverRef.current) return;
           if (defenderId === 'player') setPlayerAnimation(null); else setOpponentAnimation(null);
           if (playerHP > 0 && opponentHP > 0) {
             setActiveTurn(defenderId); 
           } else {
-            if (!isBattleOver) endBattle();
+            if (!battleOverRef.current) endBattle();
           }
         }, 700); 
         return;
@@ -281,15 +283,15 @@ const CombatScene = ({ player = {}, opponent = {}, onBattleEnd }) => {
       setBattleLog([...battleLogRef.current]);
 
       setTimeout(() => {
-        if (isBattleOver) return;
+        if (battleOverRef.current) return;
         if (defenderId === 'player') setPlayerAnimation(null); else setOpponentAnimation(null);
 
-        if (newDefenderHP <= 0 || (defenderId === 'player' ? opponentHP : playerHP) <= 0) { 
-           if (!isBattleOver) endBattle();
+        if (newDefenderHP <= 0 || (defenderId === 'player' ? opponentHP : playerHP) <= 0) {
+           if (!battleOverRef.current) endBattle();
         } else {
-          setActiveTurn(defenderId); 
+          setActiveTurn(defenderId);
         }
-      }, 600); 
+      }, 600);
     };
     
     const turnProcessDelay = battleLogRef.current.length > 0 ? 800 : 200; 
@@ -301,7 +303,8 @@ const CombatScene = ({ player = {}, opponent = {}, onBattleEnd }) => {
 
   // ... (endBattle function remains the same)
   const endBattle = () => {
-    if (isBattleOver) return;
+    if (battleOverRef.current) return;
+    battleOverRef.current = true;
     setIsBattleOver(true);
 
     setPlayerAnimation(null); setOpponentAnimation(null);
