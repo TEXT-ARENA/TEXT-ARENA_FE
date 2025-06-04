@@ -8,6 +8,8 @@ import { Menu } from "lucide-react";
 
 const equipmentTypes = ["무기", "상의", "하의", "신발"];
 
+const expNeeded = [0, 100, 150, 200, 250, 300];
+
 const defaultStats = {
   hp: 100,
   attack: 20,
@@ -19,7 +21,7 @@ const defaultStats = {
   accuracy: 0.9,
   level: 1,
   exp: 0,
-  maxExp: 100,
+  maxExp: expNeeded[1],
   wins: 0,
   losses: 0
 };
@@ -33,7 +35,8 @@ export default function BattleArena({ player, onStartCombat }) {
   const [showEquipModal, setShowEquipModal] = useState(null);
   const [showCharacterList, setShowCharacterList] = useState(false);
   const [showCharacterForm, setShowCharacterForm] = useState(false);
-  const [currentPlayer, setCurrentPlayer] = useState(player);
+  const [currentPlayer, setCurrentPlayer] = useState({ ...defaultStats, ...player });
+
   const [levelUp, setLevelUp] = useState(null);
 
   const handleFindOpponent = () => {
@@ -67,16 +70,15 @@ export default function BattleArena({ player, onStartCombat }) {
       const updated = { ...prev };
       if (winner.name === prev.name) {
         updated.wins += 1;
-        updated.exp += 60;
+        updated.exp += 100;
       } else {
         updated.losses += 1;
-        updated.exp += 20;
+        updated.exp += 50;
       }
 
       while (updated.level < 5 && updated.exp >= updated.maxExp) {
         updated.exp -= updated.maxExp;
         updated.level += 1;
-        updated.maxExp = Math.round(updated.maxExp * 1.5);
         setLevelUp(updated.level);
       }
       return updated;
@@ -97,7 +99,7 @@ export default function BattleArena({ player, onStartCombat }) {
     return <CharacterList
       onBack={() => setShowCharacterList(false)}
       onSelect={(char) => {
-        setCurrentPlayer(char);
+        setCurrentPlayer({ ...defaultStats, ...char });
         setShowCharacterList(false);
       }}
       onCreate={() => {
