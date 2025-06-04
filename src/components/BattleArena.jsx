@@ -79,6 +79,8 @@ export default function BattleArena({ player, onStartCombat }) {
       while (updated.level < 5 && updated.exp >= updated.maxExp) {
         updated.exp -= updated.maxExp;
         updated.level += 1;
+        updated.maxExp = expNeeded[updated.level];
+
         setLevelUp(updated.level);
       }
       return updated;
