@@ -36,6 +36,7 @@ export default function BattleArena({ player, onStartCombat }) {
   const [showCharacterList, setShowCharacterList] = useState(false);
   const [showCharacterForm, setShowCharacterForm] = useState(false);
   const [currentPlayer, setCurrentPlayer] = useState({ ...defaultStats, ...player });
+
   const [levelUp, setLevelUp] = useState(null);
 
   const handleFindOpponent = () => {
@@ -79,6 +80,7 @@ export default function BattleArena({ player, onStartCombat }) {
         updated.exp -= updated.maxExp;
         updated.level += 1;
         updated.maxExp = expNeeded[updated.level];
+
         setLevelUp(updated.level);
       }
       return updated;
