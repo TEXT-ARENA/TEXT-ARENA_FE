@@ -29,3 +29,20 @@ export async function fetchCharacterStats({ name, desc, onStream }) {
     losses: 0
   };
 }
+
+export async function fetchEquipment({ type, name, desc }) {
+  await new Promise(r => setTimeout(r, 800));
+  return {
+    [type]: {
+      name,
+      description: desc,
+      attackBonus: 3,
+      effects: [
+        {
+          type: "poison",
+          type_reason: "독이라니, 진짜 상대방 고생 좀 하겠는데?",
+        },
+      ],
+    },
+  };
+}
