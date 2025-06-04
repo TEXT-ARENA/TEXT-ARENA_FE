@@ -1,11 +1,12 @@
 // BattleArena.jsx
 import React, { useState, useEffect } from "react";
 import CombatSceneWrapper from "./CombatSceneWrapper";
-import CharacterList from "./CharacterList"; // 추가
-import CharacterForm from "./CharacterForm"; // 새 캐릭터 생성 폼
+import CharacterList from "./CharacterList";
+import CharacterForm from "./CharacterForm";
+import LevelUpModal from "./LevelUpModal";
 import { Menu } from "lucide-react";
 
-const equipmentTypes = ["무기", "모자", "상의", "신발"];
+const equipmentTypes = ["무기", "상의", "하의", "신발"];
 
 const defaultStats = {
   hp: 100,
@@ -33,6 +34,7 @@ export default function BattleArena({ player, onStartCombat }) {
   const [showCharacterList, setShowCharacterList] = useState(false);
   const [showCharacterForm, setShowCharacterForm] = useState(false);
   const [currentPlayer, setCurrentPlayer] = useState(player);
+  const [levelUp, setLevelUp] = useState(null);
 
   const handleFindOpponent = () => {
     setMatchmakingPhase("searching");
@@ -60,6 +62,26 @@ export default function BattleArena({ player, onStartCombat }) {
     setShowCombat(false);
     setOpponent(null);
     setMatchmakingPhase("idle");
+
+    setCurrentPlayer(prev => {
+      const updated = { ...prev };
+      if (winner.name === prev.name) {
+        updated.wins += 1;
+        updated.exp += 60;
+      } else {
+        updated.losses += 1;
+        updated.exp += 20;
+      }
+
+      while (updated.level < 5 && updated.exp >= updated.maxExp) {
+        updated.exp -= updated.maxExp;
+        updated.level += 1;
+        updated.maxExp = Math.round(updated.maxExp * 1.5);
+        setLevelUp(updated.level);
+      }
+      return updated;
+    });
+
     if (onStartCombat) onStartCombat(winner, battleResult);
   };
 
@@ -159,7 +181,7 @@ export default function BattleArena({ player, onStartCombat }) {
               onClick={() => setShowEquipModal(type)}
               className="w-16 h-16 rounded-xl border border-white/30 hover:brightness-110 transition-all duration-200 shadow-xl bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-xl"
             >
-              {equipped[type] ? equipped[type] : "❔"}
+              {equipped[type]?.name || "❔"}
             </button>
           ))}
         </div>
@@ -290,6 +312,16 @@ export default function BattleArena({ player, onStartCombat }) {
             </button>
           </div>
         </div>
+      )}
+
+      {levelUp && (
+        <LevelUpModal
+          level={levelUp}
+          onEquip={(type, item) => {
+            setEquipped(prev => ({ ...prev, [type]: item }));
+            setLevelUp(null);
+          }}
+        />
       )}
     </div>
   );
