@@ -44,7 +44,6 @@ export default function BattleArena({ player, onStartCombat }) {
         name: "알베르토 드 라 로사",
         icon: "🗡️",
         desc: "전직 기사",
-        rank: "골드 II",
         hp: 180, attack: 80, defense: 18,
         criticalChance: 0.15, criticalDamage: 1.8,
         speed: 72, dodgeChance: 0.08, accuracy: 0.92,
@@ -107,7 +106,7 @@ export default function BattleArena({ player, onStartCombat }) {
         <div className="flex justify-between items-start mb-4">
           <div>
             <h3 className="text-2xl font-black mb-1">{currentPlayer.name}</h3>
-            <span className="text-lg font-medium text-blue-300">Lv.{currentPlayer.level} • {currentPlayer.desc} • 실버 III</span>
+            <span className="text-lg font-medium text-blue-300">{currentPlayer.desc} / Lv.{currentPlayer.level}</span>
           </div>
           <div className="text-right">
             <div className="text-sm text-slate-300">전적</div>
@@ -174,7 +173,7 @@ export default function BattleArena({ player, onStartCombat }) {
               <span className="text-3xl">⚔️</span>
             </div>
             <h2 className="text-2xl font-black mb-2">랭크 게임 준비완료</h2>
-            <p className="text-slate-300">실력이 비슷한 상대를 찾아드립니다</p>
+            <p className="text-slate-300">지금 바로 대결해 보세요</p>
           </div>
           <button
             onClick={handleFindOpponent}
@@ -210,8 +209,7 @@ export default function BattleArena({ player, onStartCombat }) {
           <div className="bg-black/30 rounded-2xl p-4 max-w-sm mx-auto">
             <div className="text-sm text-orange-200 mb-2">📊 매칭 조건</div>
             <div className="space-y-1 text-xs text-orange-300">
-              <div>• 랭크: 실버 I ~ 골드 I</div>
-              <div>• 실력 점수: ±200 LP</div>
+              <div>• 랜덤 매칭!</div>
               <div>• 지역: 아시아 서버</div>
             </div>
           </div>

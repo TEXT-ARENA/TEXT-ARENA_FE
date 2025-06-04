@@ -1,10 +1,12 @@
 import React, { useState } from "react";
+import Login from "./components/Login";
 import CharacterForm from "./components/CharacterForm";
 import StatRevealDialog from "./components/StatRevealDialog";
 import BattleArena from "./components/BattleArena";
 import AIThinkingDialog from "./components/AIThinkingDialog";
 
 export default function App() {
+  const [user, setUser] = useState(null);
   const [player, setPlayer] = useState(null);
   const [stage, setStage] = useState("form");
 
@@ -25,6 +27,12 @@ export default function App() {
     setStage("thinking");
   }
 
+  // 2. 로그인 안 되어 있으면 로그인창만 보이게
+  if (!user) {
+    return <Login onLogin={setUser} />;
+  }
+
+  // 3. 로그인 된 경우 원래 앱 UI
   return (
     <div
       className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden transition-all duration-700 text-xs"
