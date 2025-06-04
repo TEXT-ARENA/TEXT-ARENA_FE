@@ -101,7 +101,7 @@ export default function App() {
       </div>
 
       {/* 애니메이션 정의 */}
-      <style jsx>{`
+      <style>{`
         @keyframes fadeIn {
           from {
             opacity: 0;
