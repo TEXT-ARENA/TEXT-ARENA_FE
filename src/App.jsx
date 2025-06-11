@@ -5,6 +5,7 @@ import StatRevealDialog from "./components/StatRevealDialog";
 import BattleArena from "./components/BattleArena";
 import AIThinkingDialog from "./components/AIThinkingDialog";
 
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [player, setPlayer] = useState(null);

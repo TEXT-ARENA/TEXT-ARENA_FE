@@ -34,6 +34,7 @@ export default function Login({ onLogin }) {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-950 via-purple-900 to-indigo-900 text-white transition-all duration-500">
       <div className="bg-white/10 backdrop-blur-2xl p-10 rounded-3xl shadow-2xl w-full max-w-xs sm:max-w-md text-center border border-white/15 animate-fade-in">
         <AnimatedHangingCharacter />
+
         <div className="flex flex-col items-center mb-7">
           <span className="text-3xl mb-1 font-black tracking-widest bg-gradient-to-r from-pink-500 via-purple-400 to-blue-400 text-transparent bg-clip-text animate-text-pop">
             ⚔ TEXT ARENA ⚔
