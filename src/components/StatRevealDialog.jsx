@@ -103,6 +103,32 @@ export default function StatRevealDialog({ character, onDone }) {
               </div>
             </div>
           ))}
+          {/* 장비 정보 */}
+          {character.equipments && character.equipments.length > 0 && (
+            <div className="mt-6">
+              <h4 className="font-bold text-base mb-2">장비</h4>
+              <ul className="space-y-1">
+                {character.equipments.map(eq => (
+                  <li key={eq.id} className="text-xs bg-slate-200/20 rounded px-2 py-1">
+                    {eq.name} ({eq.type}) +{eq.bonusValue}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {/* 상태이상 정보 */}
+          {character.statusEffects && character.statusEffects.length > 0 && (
+            <div className="mt-4">
+              <h4 className="font-bold text-base mb-2">상태이상</h4>
+              <ul className="space-y-1">
+                {character.statusEffects.map((se, idx) => (
+                  <li key={idx} className="text-xs bg-red-200/20 rounded px-2 py-1">
+                    {se.type}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         {/* 푸터 */}

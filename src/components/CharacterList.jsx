@@ -2,16 +2,31 @@
 import React, { useState } from "react";
 import { Plus, Trash2, ChevronLeft } from "lucide-react";
 
-const initialCharacters = [
-  { name: "돼지", desc: "돼지다", icon: "🐷" },
-  { name: "컴공 4학년 대학생", desc: "불쌍하다", icon: "😓" },
-];
+export default function CharacterList({ onSelect, onBack, onCreate, characters, onRefresh }) {
+  //const [characters, setCharacters] = useState(initialCharacters);
+  const [isDeleting, setIsDeleting] = useState(null);
 
-export default function CharacterList({ onSelect, onBack, onCreate }) {
-  const [characters, setCharacters] = useState(initialCharacters);
 
-  const handleDelete = (index) => {
-    setCharacters(characters.filter((_, i) => i !== index));
+  const handleDelete = async (character) => {
+    if (!confirm(`${character.name} 캐릭터를 삭제하시겠습니까?`)) return;
+    
+    try {
+      setIsDeleting(character.character_id);
+      const response = await fetch(`/api/characters/${character.character_id}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        onRefresh(); // 목록 새로고침
+      } else {
+        alert('캐릭터 삭제에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('삭제 실패:', error);
+      alert('캐릭터 삭제에 실패했습니다.');
+    } finally {
+      setIsDeleting(null);
+    }
   };
 
   return (
@@ -23,15 +38,24 @@ export default function CharacterList({ onSelect, onBack, onCreate }) {
         <h2 className="mx-auto text-xl font-bold">캐릭터 목록</h2>
       </div>
 
-      <div className="space-y-2 mb-6">
+       <div className="space-y-2 mb-6">
         {characters.map((char, i) => (
           <div
-            key={i}
+            key={char.character_id} // character_id를 key로 사용
             className="bg-white/10 p-3 rounded-xl flex justify-between items-center hover:bg-white/20 transition"
           >
             <div>
-              <div className="font-bold text-lg">{char.name}</div>
+              <div className="font-bold text-lg flex items-center gap-2">
+                <span>{char.icon}</span>
+                <span>{char.name}</span>
+                <span className="text-xs bg-blue-500/20 px-2 py-1 rounded">
+                  Lv.{char.level}
+                </span>
+              </div>
               <div className="text-sm text-slate-300">{char.desc}</div>
+              <div className="text-xs text-slate-400">
+                {char.wins}승 {char.losses}패 | HP: {char.hp} | 공격: {char.attack}
+              </div>
             </div>
             <div className="flex gap-2 items-center">
               <button
@@ -41,10 +65,11 @@ export default function CharacterList({ onSelect, onBack, onCreate }) {
                 선택
               </button>
               <button
-                onClick={() => handleDelete(i)}
-                className="text-red-400 hover:text-red-600"
+                onClick={() => handleDelete(char)}
+                disabled={isDeleting === char.character_id}
+                className="text-red-400 hover:text-red-600 disabled:opacity-50"
               >
-                <Trash2 size={18} />
+                {isDeleting === char.character_id ? "삭제중..." : <Trash2 size={18} />}
               </button>
             </div>
           </div>
@@ -56,7 +81,7 @@ export default function CharacterList({ onSelect, onBack, onCreate }) {
           onClick={onCreate}
           className="w-full py-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl font-bold text-white hover:brightness-110 hover:scale-[1.02] transition-transform flex items-center justify-center gap-2"
         >
-          <Plus size={18} /> 새 캐릭터 생성
+          <Plus size={18} /> 새 캐릭터 생성 ({characters.length}/5)
         </button>
       )}
     </div>

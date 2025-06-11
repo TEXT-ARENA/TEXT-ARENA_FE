@@ -26,7 +26,7 @@ const defaultStats = {
   losses: 0
 };
 
-export default function BattleArena({ player, onStartCombat }) {
+export default function BattleArena({ player, onStartCombat, characters, onCharacterSelect, onRefreshCharacters }) {
   const [opponent, setOpponent] = useState(null);
   const [showCombat, setShowCombat] = useState(false);
   const [matchmakingPhase, setMatchmakingPhase] = useState("idle");
@@ -90,17 +90,22 @@ export default function BattleArena({ player, onStartCombat }) {
   };
 
   if (showCharacterForm) {
-    return <CharacterForm onSubmit={(newChar) => {
+  return <CharacterForm 
+    onSubmit={(newChar) => {
       const fullChar = { ...defaultStats, ...newChar };
       setCurrentPlayer(fullChar);
       setShowCharacterForm(false);
-    }} />;
-  }
+    }} 
+    userId={player?.userId}
+  />;
+}
 
   if (showCharacterList) {
     return <CharacterList
+      characters={characters} // 서버에서 가져온 캐릭터 목록 전달
       onBack={() => setShowCharacterList(false)}
       onSelect={(char) => {
+        onCharacterSelect(char); // 상위 컴포넌트의 핸들러 사용
         setCurrentPlayer({ ...defaultStats, ...char });
         setShowCharacterList(false);
       }}
@@ -108,6 +113,7 @@ export default function BattleArena({ player, onStartCombat }) {
         setShowCharacterList(false);
         setShowCharacterForm(true);
       }}
+      onRefresh={onRefreshCharacters} // 목록 새로고침 함수 전달
     />;
   }
 
@@ -321,10 +327,30 @@ export default function BattleArena({ player, onStartCombat }) {
       {levelUp && (
         <LevelUpModal
           level={levelUp}
-          onEquip={(type, item) => {
-            setEquipped(prev => ({ ...prev, [type]: item }));
+          characterId={currentPlayer.character_id}
+          onEquip={(equipType, newEquipment, updatedCharacter) => {
+            setEquipped(prev => ({ ...prev, [equipType]: newEquipment }));
+            setCurrentPlayer(updatedCharacter);
             setLevelUp(null);
+          }
+          }
+          onClose={() => setLevelUp(null)}
+          equipDisplayName={showEquipModal || "장비"}
+          equipType={showEquipModal || "무기"}
+          character={currentPlayer}
+          userId={player?.userId}
+          onRefreshCharacters={onRefreshCharacters}
+          onCharacterSelect={(char) => {
+            setCurrentPlayer({ ...defaultStats, ...char });
+            setShowCharacterList(false);
           }}
+          onBack={() => setShowCharacterList(false)}
+          onCreate={() => {
+            setShowCharacterList(false);
+            setShowCharacterForm(true);
+          }}
+          characters={characters} // 서버에서 가져온 캐릭터 목록 전달
+          onRefresh={onRefreshCharacters} // 목록 새로고침 함수 전달
         />
       )}
     </div>

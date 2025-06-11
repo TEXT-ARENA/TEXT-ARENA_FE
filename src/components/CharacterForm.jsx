@@ -1,6 +1,8 @@
+//CharacterForm.jsx
 import React, { useState } from "react";
+import { fetchCharacterFromServer } from "../api/aiPrompt";
 
-export default function CharacterForm({ onSubmit }) {
+export default function CharacterForm({ onSubmit, userId }) {
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -8,15 +10,17 @@ export default function CharacterForm({ onSubmit }) {
   async function handleSubmit(e) {
     e.preventDefault();
     if (!name.trim()) return;
-
     setIsSubmitting(true);
-
-    setTimeout(() => {
-      onSubmit({ name, desc, icon: name[0] || "?" });
+    try {
+      const result = await fetchCharacterFromServer({ name, desc, userId });
+      onSubmit(result);
       setName("");
       setDesc("");
-      setIsSubmitting(false);
-    }, 1000);
+    } catch (err) {
+      console.error("캐릭터 생성 에러:", err);
+      alert("캐릭터 생성 실패: " + err.message);
+    }
+    setIsSubmitting(false);
   }
 
   return (
@@ -95,9 +99,9 @@ export default function CharacterForm({ onSubmit }) {
 
           <button
             type="submit"
-            disabled={isSubmitting || !name.trim()}
+            disabled={isSubmitting || !name.trim() || !userId}
             className={`w-full py-4 font-bold text-lg rounded-xl shadow-xl transition-all duration-300 ${
-              isSubmitting || !name.trim()
+              isSubmitting || !name.trim() || !userId
                 ? 'bg-slate-600/30 text-slate-400 cursor-not-allowed'
                 : 'bg-gradient-to-br from-purple-500/90 to-blue-500/90 hover:from-purple-400/90 hover:to-blue-400/90 text-white hover:shadow-2xl active:scale-[98%]'
             }`}
@@ -114,6 +118,11 @@ export default function CharacterForm({ onSubmit }) {
               </span>
             )}
           </button>
+          {!userId && (
+            <div className="mt-3 text-red-400 text-sm font-bold">
+              로그인 정보가 없습니다. 다시 로그인 해주세요.
+            </div>
+          )}
 
           <div className="mt-7 p-4 bg-slate-700/30 rounded-xl border border-slate-600/50 backdrop-blur-sm">
             <div className="flex items-start gap-3 text-slate-200/90">

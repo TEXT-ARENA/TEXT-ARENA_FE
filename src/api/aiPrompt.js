@@ -46,3 +46,43 @@ export async function fetchEquipment({ type, name, desc }) {
     },
   };
 }
+
+
+export async function fetchCharacterFromServer({ name, desc, userId }) {
+  try {
+    if (!userId) {
+      throw new Error("userId가 제공되지 않았습니다. 로그인을 확인해주세요.");
+    }
+
+    const response = await fetch(`http://18.209.30.21:8080/api/characters/${userId}`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({ characterName: name, description: desc }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      try {
+        const errorJson = JSON.parse(errorText);
+        throw new Error(`HTTP ${response.status}: ${errorJson.detail || errorText}`);
+      } catch {
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+    }
+
+    const data = await response.json();
+    
+    if (!data.isSuccess) {
+      throw new Error(data.message || "서버에서 캐릭터 생성 실패");
+    }
+    
+    return data.result;
+    
+  } catch (error) {
+    console.error("API 통신 에러:", error);
+    throw error;
+  }
+}

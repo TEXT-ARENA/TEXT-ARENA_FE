@@ -1,3 +1,4 @@
+//login.jsx
 import React, { useState } from "react";
 import AnimatedHangingCharacter from "./AnimatedHangingCharacter";
 import { Loader2, User, KeyRound } from "lucide-react";
@@ -22,7 +23,8 @@ export default function Login({ onLogin }) {
       const data = await response.json();
 
       if (!response.ok) throw new Error(data.message || "로그인 실패");
-      onLogin(data.user || data);
+      localStorage.setItem('userId', data.result);
+      onLogin({ userId: data.result });
     } catch (err) {
       setError(err.message);
     } finally {
