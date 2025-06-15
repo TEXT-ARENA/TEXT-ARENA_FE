@@ -14,9 +14,18 @@ export default function AIThinkingDialog({ character, onDone }) {
     }
 
     // character 객체에서 _reason으로 끝나는 모든 키를 찾아서 해당 값들을 배열로 만듭니다
-    const nextReasons = Object.entries(character)
-      .filter(([key, value]) => key.includes('_reason') && value)
+    let nextReasons = Object.entries(character)
+      .filter(([key, value]) => key.endsWith('_reason') && value)
       .map(([key, value]) => value);
+
+    // 만약 reason이라는 키가 있다면(단일 문자열)
+    if (nextReasons.length === 0 && character.reason) {
+      if (Array.isArray(character.reason)) {
+        nextReasons = character.reason;
+      } else if (typeof character.reason === 'string') {
+        nextReasons = [character.reason];
+      }
+    }
 
     console.log('Found reasons:', nextReasons); // 디버깅을 위한 로그
 

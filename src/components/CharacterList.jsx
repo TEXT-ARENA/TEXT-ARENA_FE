@@ -41,31 +41,27 @@ export default function CharacterList({ onSelect, onBack, onCreate, characters, 
        <div className="space-y-2 mb-6">
         {characters.map((char, i) => (
           <div
-            key={char.character_id} // character_id를 key로 사용
-            className="bg-white/10 p-3 rounded-xl flex justify-between items-center hover:bg-white/20 transition"
+            key={char.character_id}
+            className="bg-white/10 p-3 rounded-xl flex justify-between items-center hover:bg-white/20 transition cursor-pointer"
+            onClick={() => onSelect(char)}
           >
             <div>
               <div className="font-bold text-lg flex items-center gap-2">
-                <span>{char.icon}</span>
                 <span>{char.name}</span>
-                <span className="text-xs bg-blue-500/20 px-2 py-1 rounded">
-                  Lv.{char.level}
-                </span>
               </div>
-              <div className="text-sm text-slate-300">{char.desc}</div>
               <div className="text-xs text-slate-400">
-                {char.wins}승 {char.losses}패 | HP: {char.hp} | 공격: {char.attack}
+                HP: {char.hp} | 공격: {char.attack} | 방어: {char.defense}
               </div>
             </div>
             <div className="flex gap-2 items-center">
               <button
-                onClick={() => onSelect(char)}
+                onClick={e => { e.stopPropagation(); onSelect(char); }}
                 className="text-sm bg-sky-600 px-3 py-1 rounded-lg hover:bg-sky-700"
               >
                 선택
               </button>
               <button
-                onClick={() => handleDelete(char)}
+                onClick={e => { e.stopPropagation(); handleDelete(char); }}
                 disabled={isDeleting === char.character_id}
                 className="text-red-400 hover:text-red-600 disabled:opacity-50"
               >

@@ -5,6 +5,8 @@ import CharacterList from "./CharacterList";
 import CharacterForm from "./CharacterForm";
 import LevelUpModal from "./LevelUpModal";
 import { Menu } from "lucide-react";
+import StatRevealDialog from "./StatRevealDialog";
+import AIThinkingDialog from "./AIThinkingDialog";
 
 const equipmentTypes = ["무기", "상의", "하의", "신발"];
 
@@ -26,7 +28,7 @@ const defaultStats = {
   losses: 0
 };
 
-export default function BattleArena({ player, onStartCombat, characters, onCharacterSelect, onRefreshCharacters }) {
+export default function BattleArena({ player, onStartCombat, characters, onCharacterSelect, onRefreshCharacters, user, onCreateCharacter, onRequestCreateCharacter }) {
   const [opponent, setOpponent] = useState(null);
   const [showCombat, setShowCombat] = useState(false);
   const [matchmakingPhase, setMatchmakingPhase] = useState("idle");
@@ -38,6 +40,9 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
   const [currentPlayer, setCurrentPlayer] = useState({ ...defaultStats, ...player });
 
   const [levelUp, setLevelUp] = useState(null);
+  const [showStatDialog, setShowStatDialog] = useState(false);
+  const [showThinkingDialog, setShowThinkingDialog] = useState(false);
+  const [newCharacter, setNewCharacter] = useState(null);
 
   const handleFindOpponent = () => {
     setMatchmakingPhase("searching");
@@ -89,17 +94,6 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
     if (onStartCombat) onStartCombat(winner, battleResult);
   };
 
-  if (showCharacterForm) {
-  return <CharacterForm 
-    onSubmit={(newChar) => {
-      const fullChar = { ...defaultStats, ...newChar };
-      setCurrentPlayer(fullChar);
-      setShowCharacterForm(false);
-    }} 
-    userId={player?.userId}
-  />;
-}
-
   if (showCharacterList) {
     return <CharacterList
       characters={characters} // 서버에서 가져온 캐릭터 목록 전달
@@ -111,7 +105,9 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
       }}
       onCreate={() => {
         setShowCharacterList(false);
-        setShowCharacterForm(true);
+        if (typeof onRequestCreateCharacter === 'function') {
+          onRequestCreateCharacter();
+        }
       }}
       onRefresh={onRefreshCharacters} // 목록 새로고침 함수 전달
     />;
@@ -332,13 +328,12 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
             setEquipped(prev => ({ ...prev, [equipType]: newEquipment }));
             setCurrentPlayer(updatedCharacter);
             setLevelUp(null);
-          }
-          }
+          }}
           onClose={() => setLevelUp(null)}
           equipDisplayName={showEquipModal || "장비"}
           equipType={showEquipModal || "무기"}
           character={currentPlayer}
-          userId={player?.userId}
+          userId={user?.userId}
           onRefreshCharacters={onRefreshCharacters}
           onCharacterSelect={(char) => {
             setCurrentPlayer({ ...defaultStats, ...char });

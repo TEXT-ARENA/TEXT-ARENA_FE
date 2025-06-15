@@ -16,38 +16,34 @@ export default function App() {
   const fetchCharacters = async (userId) => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/characters?userId=${userId}`);
+      const response = await fetch(`/api/characters/list/${userId}`);
       const data = await response.json();
-      
-      const formattedCharacters = data.map(char => ({
-        character_id: char.character_id,
-        name: char.character_name,
-        desc: char.hp_reason || "설명 없음",
+      const charactersArr = Array.isArray(data.result) ? data.result : [];
+      const formattedCharacters = charactersArr.map(char => ({
+        character_id: char.characterId,
+        name: char.name,
+        desc: '',
         icon: "⚔️",
         hp: char.hp,
         attack: char.attack,
         defense: char.defense,
-        speed: char.speed,
-        criticalChance: char.critical_chance,
-        criticalDamage: char.critical_damage,
-        dodgeChance: char.dodge_chance,
-        accuracy: char.accuracy,
-        level: char.level,
-        exp: char.exp,
         wins: char.wins || 0,
         losses: char.losses || 0,
-        userId: char.user_id
+        userId: userId
       }));
-      
       setCharacters(formattedCharacters);
-      
       const lastUsedId = localStorage.getItem(`lastCharacter_${userId}`);
-      if (lastUsedId && formattedCharacters.length > 0) {
-        const lastCharacter = formattedCharacters.find(c => c.character_id === lastUsedId);
-        if (lastCharacter) {
-          setPlayer(lastCharacter);
-          setStage("battle");
+      if (formattedCharacters.length > 0) {
+        let selectedCharacter = null;
+        if (lastUsedId) {
+          selectedCharacter = formattedCharacters.find(c => String(c.character_id) === String(lastUsedId));
         }
+        if (!selectedCharacter) {
+          selectedCharacter = formattedCharacters[0];
+        }
+        setPlayer(selectedCharacter);
+        localStorage.setItem(`lastCharacter_${userId}`, selectedCharacter.character_id);
+        setStage("battle");
       }
     } catch (error) {
       console.error('캐릭터 로드 실패:', error);
@@ -60,13 +56,30 @@ export default function App() {
     const storedUserId = localStorage.getItem('userId');
     if (storedUserId) {
       setUser({ userId: storedUserId });
-      fetchCharacters(storedUserId);
     }
   }, []);
+
+  useEffect(() => {
+    if (user?.userId) {
+      fetchCharacters(user.userId);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (characters.length > 0) {
+      setStage('battle');
+    } else {
+      setStage('form');
+    }
+  }, [characters, user]);
 
   function handleCreate(character) {
     setPlayer(character);
     setStage("thinking");
+    if (user?.userId && character.character_id) {
+      localStorage.setItem(`lastCharacter_${user.userId}`, character.character_id);
+    }
     if (user?.userId) {
       fetchCharacters(user.userId);
     }
@@ -87,6 +100,17 @@ export default function App() {
 
   if (!user) {
     return <Login onLogin={setUser} />;
+  }
+
+  if (loading || (user && characters.length === 0 && stage !== 'form')) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+          <div className="text-white text-lg font-bold mt-2">로딩 중...</div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -139,7 +163,7 @@ export default function App() {
 
         {/* 메인 컨텐츠 */}
         <div className="relative z-10 w-full max-w-md px-4 py-4 flex flex-col gap-6 items-center justify-center">
-          {stage === "form" && user?.userId && (
+          {stage === "form" && user?.userId && !loading && (
             <div className="transform transition-all duration-500 animate-fadeIn w-full">
               <CharacterForm onSubmit={handleCreate} userId={user.userId} />
             </div>
@@ -150,7 +174,13 @@ export default function App() {
           )}
 
           {stage === "stat" && player && (
-            <StatRevealDialog character={player} onDone={() => setStage("battle")} />
+            <StatRevealDialog character={player} onDone={async () => {
+              if (user?.userId && player?.character_id) {
+                localStorage.setItem(`lastCharacter_${user.userId}`, player.character_id);
+                await fetchCharacters(user.userId);
+              }
+              setStage("battle");
+            }} />
           )}
 
           {stage === "battle" && player && (
@@ -160,6 +190,9 @@ export default function App() {
                 characters={characters}
                 onCharacterSelect={handleCharacterSelect}
                 onRefreshCharacters={() => fetchCharacters(user.userId)}
+                user={user}
+                onCreateCharacter={handleCreate}
+                onRequestCreateCharacter={() => setStage('form')}
               />
             </div>
           )}
