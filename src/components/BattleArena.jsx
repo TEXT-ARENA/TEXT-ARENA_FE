@@ -109,6 +109,8 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
       try {
         const res = await fetch(`/api/characters/battle/${currentPlayer.character_id}`);
         const data = await res.json();
+        console.log("Fetched equipments:", data);
+
         if (data.isSuccess && Array.isArray(data.result) && data.result[0]?.equipments) {
           // type: weapon, hat, top, shoes
           const eqMap = {};

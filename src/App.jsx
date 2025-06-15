@@ -20,6 +20,7 @@ export default function App() {
       const response = await fetch(`/api/characters/list/${userId}`);
       const data = await response.json();
       const charactersArr = Array.isArray(data.result) ? data.result : [];
+      console.log('Fetched characters:', charactersArr); // 디버깅을 위한 로그
       const formattedCharacters = charactersArr.map(char => ({
         character_id: char.characterId,
         name: char.name,
@@ -28,6 +29,7 @@ export default function App() {
         hp: char.hp,
         attack: char.attack,
         defense: char.defense,
+        experience: char.exp || 0,
         wins: char.wins || 0,
         losses: char.losses || 0,
         userId: userId

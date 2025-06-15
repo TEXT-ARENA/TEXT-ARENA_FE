@@ -25,7 +25,7 @@ export default function CharacterForm({ onSubmit, userId }) {
 
   return (
     <div className="min-h-screen flex items-start justify-center px-4 pt-0">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md" style={{ minWidth: '400px' }}>
         <div className="text-center mb-10">
           <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent mb-3">
             ✨ 캐릭터 생성

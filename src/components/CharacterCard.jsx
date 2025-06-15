@@ -26,6 +26,7 @@ export default function CharacterCard({ character, isPlayer }) {
           : "bg-gradient-to-br from-pink-500 via-rose-600 to-red-700"
       }`}
       style={{
+        minWidth: '400px',
         boxShadow: isPlayer 
           ? '0 25px 50px rgba(59, 130, 246, 0.4), 0 0 0 1px rgba(255,255,255,0.1)'
           : '0 25px 50px rgba(239, 68, 68, 0.4), 0 0 0 1px rgba(255,255,255,0.1)',
@@ -85,7 +86,7 @@ export default function CharacterCard({ character, isPlayer }) {
             <span className="text-green-200">승 {character.wins ?? 0}</span>
           </div>
           <div className="bg-red-500/20 px-3 py-1 rounded-full border border-red-400/30">
-            <span className="text-red-200">패 {character.losses ?? 0}</span>
+            <span className="text-red-200">패 {character.loses ?? 0}</span>
           </div>
         </div>
       </div>

@@ -86,3 +86,36 @@ export async function fetchCharacterFromServer({ name, desc, userId }) {
     throw error;
   }
 }
+
+// 전투 결과를 서버에 전송
+export async function fetchBattleResult({ winnerId, loserId }) {
+  try {
+    const response = await fetch("http://18.209.30.21:8080/api/characters/battle", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify({ winnerId, loserId })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      try {
+        const errorJson = JSON.parse(errorText);
+        throw new Error(`HTTP ${response.status}: ${errorJson.detail || errorText}`);
+      } catch {
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+    }
+
+    const data = await response.json();
+    if (!data.isSuccess) {
+      throw new Error(data.message || "서버에서 전투 결과 저장 실패");
+    }
+    return data.result;
+  } catch (error) {
+    console.error("전투 결과 API 통신 에러:", error);
+    throw error;
+  }
+}

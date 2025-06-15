@@ -32,6 +32,7 @@ const CharacterStatPanel = ({ character = {}, currentHP = 0, isPlayerCharacter, 
         rounded-2xl shadow-xl flex flex-col justify-between
         ${isPlayerCharacter ? 'bg-sky-900/80 border border-sky-700/40' : 'bg-red-900/80 border border-red-700/40'}
       `}
+      style={{ minWidth: '400px' }}
     >
       {/* 이름 + HP */}
       <div className="text-center h-[3.5rem] mb-2">
@@ -366,7 +367,7 @@ const CombatScene = ({ player = {}, opponent = {}, onBattleEnd }) => {
       </div>
 
       {/* Styles remain the same */}
-      <style jsx global>{`
+      <style>{`
         @keyframes damagePopup {
           0% { transform: scale(0.8) translateY(0) translateX(-50%); opacity: 1; }
           50% { transform: scale(1.3) translateY(-20px) translateX(-50%); }

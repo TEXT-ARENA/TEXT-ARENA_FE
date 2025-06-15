@@ -48,6 +48,8 @@ export default function LevelUpModal({ level, characterId, onEquip }) {
         throw new Error(data.message || '장비 생성에 실패했습니다.');
       }
       if (data.isSuccess) {
+        console.log('장비 생성 성공:', data.result);
+      
         const newEquipment = data.result.equipments?.find(
           equipment => equipment.type === equipType && equipment.name === name
         );
