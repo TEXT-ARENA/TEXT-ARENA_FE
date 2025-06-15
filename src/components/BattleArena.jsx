@@ -8,7 +8,12 @@ import { Menu } from "lucide-react";
 import StatRevealDialog from "./StatRevealDialog";
 import AIThinkingDialog from "./AIThinkingDialog";
 
-const equipmentTypes = ["무기", "상의", "하의", "신발"];
+const equipmentTypes = [
+  { key: "weapon", label: "무기" },
+  { key: "hat", label: "모자" },
+  { key: "top", label: "상의" },
+  { key: "shoes", label: "신발" },
+];
 
 const expNeeded = [0, 100, 150, 200, 250, 300];
 
@@ -34,6 +39,7 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
   const [matchmakingPhase, setMatchmakingPhase] = useState("idle");
   const [searchTime, setSearchTime] = useState(0);
   const [equipped, setEquipped] = useState({});
+  const [allEquipments, setAllEquipments] = useState([]); // 전체 보유 장비
   const [showEquipModal, setShowEquipModal] = useState(null);
   const [showCharacterList, setShowCharacterList] = useState(false);
   const [showCharacterForm, setShowCharacterForm] = useState(false);
@@ -43,6 +49,8 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
   const [showStatDialog, setShowStatDialog] = useState(false);
   const [showThinkingDialog, setShowThinkingDialog] = useState(false);
   const [newCharacter, setNewCharacter] = useState(null);
+  const [shakeEquip, setShakeEquip] = useState({}); // 장비 흔들림 상태
+  const [emptyMsg, setEmptyMsg] = useState({}); // 비어있는 칸 클릭 메시지 상태
 
   const handleFindOpponent = () => {
     setMatchmakingPhase("searching");
@@ -92,6 +100,45 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
     });
 
     if (onStartCombat) onStartCombat(winner, battleResult);
+  };
+
+  useEffect(() => {
+    // 캐릭터가 바뀔 때마다 장비 정보 불러오기
+    async function fetchEquipments() {
+      if (!currentPlayer?.character_id) return;
+      try {
+        const res = await fetch(`/api/characters/battle/${currentPlayer.character_id}`);
+        const data = await res.json();
+        if (data.isSuccess && Array.isArray(data.result) && data.result[0]?.equipments) {
+          // type: weapon, hat, top, shoes
+          const eqMap = {};
+          data.result[0].equipments.forEach(eq => {
+            eqMap[eq.type] = eq;
+          });
+          setEquipped(eqMap);
+          setAllEquipments(data.result[0].equipments); // 전체 장비 저장
+        } else {
+          setEquipped({});
+          setAllEquipments([]);
+        }
+      } catch (e) {
+        setEquipped({});
+        setAllEquipments([]);
+      }
+    }
+    fetchEquipments();
+  }, [currentPlayer?.character_id]);
+
+  // 흔들림 애니메이션 트리거 함수
+  const handleEmptyEquipClick = (key) => {
+    setShakeEquip((prev) => ({ ...prev, [key]: true }));
+    setEmptyMsg((prev) => ({ ...prev, [key]: true }));
+    setTimeout(() => {
+      setShakeEquip((prev) => ({ ...prev, [key]: false }));
+    }, 600); // 애니메이션 지속 시간
+    setTimeout(() => {
+      setEmptyMsg((prev) => ({ ...prev, [key]: false }));
+    }, 1500); // 메시지 사라지는 시간
   };
 
   if (showCharacterList) {
@@ -181,15 +228,40 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
       {/* Equipment Panel */}
       <div className="bg-white/10 backdrop-blur-xl p-4 rounded-2xl border border-white/20 mb-6">
         <div className="flex justify-between items-center">
-          {equipmentTypes.map((type) => (
-            <button
-              key={type}
-              onClick={() => setShowEquipModal(type)}
-              className="w-16 h-16 rounded-xl border border-white/30 hover:brightness-110 transition-all duration-200 shadow-xl bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-xl"
-            >
-              {equipped[type]?.name || "❔"}
-            </button>
-          ))}
+          {equipmentTypes.map(({ key, label }) => {
+            const isEmpty = !equipped[key];
+            return (
+              <div key={key} className="flex flex-col items-center w-16 relative">
+                <button
+                  onClick={() => {
+                    if (isEmpty) {
+                      handleEmptyEquipClick(key);
+                    } else {
+                      setShowEquipModal(key);
+                    }
+                  }}
+                  className={`w-16 h-16 rounded-xl border border-white/30 transition-all duration-200 shadow-xl flex items-center justify-center text-xl
+                    bg-slate-800 hover:bg-slate-700
+                    ${isEmpty ? `empty-equip ${shakeEquip[key] ? 'animate-equip-shake border-red-500 bg-red-900/40' : ''}` : ''}`}
+                  style={{ cursor: 'pointer' }}
+                  aria-label={label + (isEmpty ? ' 비어있음' : '')}
+                >
+                  {isEmpty ? (
+                    <span className="inline-block w-8 h-8 rounded-full border-2 border-dashed border-slate-500 bg-transparent"></span>
+                  ) : (
+                    equipped[key]?.name
+                  )}
+                </button>
+                <span className="text-[10px] text-slate-300 mt-1">{label}</span>
+                {/* 비어있는 칸 클릭 메시지 */}
+                {emptyMsg[key] && (
+                  <div className="absolute left-1/2 -translate-x-1/2 top-20 animate-equip-msg bg-red-500/90 text-white text-xs font-bold px-3 py-1 rounded-xl shadow-lg pointer-events-none select-none z-20 w-max whitespace-nowrap">
+                    ⚠️ {label}{label === '신발' ? '이' : '가'} 없습니다!
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -295,18 +367,21 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
       {showEquipModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50">
           <div className="bg-white text-black p-6 rounded-2xl shadow-xl max-w-sm w-full">
-            <h3 className="text-lg font-bold mb-4">{showEquipModal} 장비 선택</h3>
-            <div className="grid grid-cols-3 gap-3">
-              {["⚪", "🟦", "🟨"].map(item => (
+            <h3 className="text-lg font-bold mb-4">{equipmentTypes.find(e=>e.key===showEquipModal)?.label || showEquipModal} 장비 선택</h3>
+            <div className="grid grid-cols-1 gap-3">
+              {allEquipments.filter(eq => eq.type === showEquipModal).length === 0 && (
+                <div className="text-center text-slate-400 py-4">보유한 장비가 없습니다.</div>
+              )}
+              {allEquipments.filter(eq => eq.type === showEquipModal).map(eq => (
                 <button
-                  key={item}
+                  key={eq.id || eq.name}
                   onClick={() => {
-                    setEquipped(prev => ({ ...prev, [showEquipModal]: item }));
+                    setEquipped(prev => ({ ...prev, [showEquipModal]: eq }));
                     setShowEquipModal(null);
                   }}
-                  className="bg-gray-100 hover:bg-gray-200 rounded-lg p-4 text-2xl text-center"
+                  className="bg-gray-100 hover:bg-gray-200 rounded-lg p-4 text-base text-center font-bold border border-slate-300"
                 >
-                  {item}
+                  {eq.name} {eq.description ? <span className='text-xs text-slate-500'>({eq.description})</span> : null}
                 </button>
               ))}
             </div>
@@ -348,6 +423,34 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
           onRefresh={onRefreshCharacters} // 목록 새로고침 함수 전달
         />
       )}
+
+      {/* 커스텀 흔들림/메시지 애니메이션 스타일 */}
+      <style>{`
+        @keyframes equip-shake {
+          0% { transform: translateX(0); }
+          15% { transform: translateX(-6px); }
+          30% { transform: translateX(6px); }
+          45% { transform: translateX(-6px); }
+          60% { transform: translateX(6px); }
+          75% { transform: translateX(-4px); }
+          100% { transform: translateX(0); }
+        }
+        .animate-equip-shake {
+          animation: equip-shake 0.6s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        .empty-equip {
+          border-style: dashed !important;
+        }
+        @keyframes equip-msg {
+          0% { opacity: 0; transform: translateY(20px) scale(0.95); }
+          20% { opacity: 1; transform: translateY(0) scale(1); }
+          80% { opacity: 1; transform: translateY(0) scale(1); }
+          100% { opacity: 0; transform: translateY(-20px) scale(0.95); }
+        }
+        .animate-equip-msg {
+          animation: equip-msg 1.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+      `}</style>
     </div>
   );
 }

@@ -103,7 +103,7 @@ export default function CombatSceneWrapper({ player, opponent, onBattleEnd }) {
         </div>
       )}
 
-      <style jsx global>{`
+      <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
