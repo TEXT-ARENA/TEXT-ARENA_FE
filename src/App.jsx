@@ -12,8 +12,9 @@ export default function App() {
   const [stage, setStage] = useState("form");
   const [characters, setCharacters] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [newCharacterId, setNewCharacterId] = useState(null);
 
-  const fetchCharacters = async (userId) => {
+  const fetchCharacters = async (userId, shouldSetPlayer = true) => {
     try {
       setLoading(true);
       const response = await fetch(`/api/characters/list/${userId}`);
@@ -33,7 +34,7 @@ export default function App() {
       }));
       setCharacters(formattedCharacters);
       const lastUsedId = localStorage.getItem(`lastCharacter_${userId}`);
-      if (formattedCharacters.length > 0) {
+      if (shouldSetPlayer && formattedCharacters.length > 0) {
         let selectedCharacter = null;
         if (lastUsedId) {
           selectedCharacter = formattedCharacters.find(c => String(c.character_id) === String(lastUsedId));
@@ -43,10 +44,11 @@ export default function App() {
         }
         setPlayer(selectedCharacter);
         localStorage.setItem(`lastCharacter_${userId}`, selectedCharacter.character_id);
-        setStage("battle");
       }
+      return formattedCharacters;
     } catch (error) {
       console.error('캐릭터 로드 실패:', error);
+      return [];
     } finally {
       setLoading(false);
     }
@@ -68,7 +70,9 @@ export default function App() {
   useEffect(() => {
     if (!user) return;
     if (characters.length > 0) {
-      setStage('battle');
+      if (stage === 'form') {
+        setStage('battle');
+      }
     } else {
       setStage('form');
     }
@@ -76,12 +80,13 @@ export default function App() {
 
   function handleCreate(character) {
     setPlayer(character);
+    setNewCharacterId(character.character_id);
     setStage("thinking");
     if (user?.userId && character.character_id) {
       localStorage.setItem(`lastCharacter_${user.userId}`, character.character_id);
     }
     if (user?.userId) {
-      fetchCharacters(user.userId);
+      fetchCharacters(user.userId, false);
     }
   }
 
@@ -177,7 +182,12 @@ export default function App() {
             <StatRevealDialog character={player} onDone={async () => {
               if (user?.userId && player?.character_id) {
                 localStorage.setItem(`lastCharacter_${user.userId}`, player.character_id);
-                await fetchCharacters(user.userId);
+                const updatedCharacters = await fetchCharacters(user.userId, false);
+                if (newCharacterId) {
+                  const found = updatedCharacters.find(c => String(c.character_id) === String(newCharacterId));
+                  if (found) setPlayer(found);
+                  setNewCharacterId(null);
+                }
               }
               setStage("battle");
             }} />

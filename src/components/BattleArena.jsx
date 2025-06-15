@@ -134,7 +134,7 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
         <div className="flex justify-between items-start mb-4">
           <div>
             <h3 className="text-2xl font-black mb-1">{currentPlayer.name}</h3>
-            <span className="text-lg font-medium text-blue-300">{currentPlayer.desc} / Lv.{currentPlayer.level}</span>
+            <span className="text-lg font-medium text-blue-300">{currentPlayer.desc}Lv.{currentPlayer.level}</span>
           </div>
           <div className="text-right">
             <div className="text-sm text-slate-300">전적</div>

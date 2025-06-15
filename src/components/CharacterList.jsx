@@ -13,13 +13,17 @@ export default function CharacterList({ onSelect, onBack, onCreate, characters, 
     try {
       setIsDeleting(character.character_id);
       const response = await fetch(`/api/characters/${character.character_id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
       
       if (response.ok) {
         onRefresh(); // 목록 새로고침
       } else {
-        alert('캐릭터 삭제에 실패했습니다.');
+        const data = await response.json().catch(() => ({}));
+        alert(data.message || '캐릭터 삭제에 실패했습니다.');
       }
     } catch (error) {
       console.error('삭제 실패:', error);
