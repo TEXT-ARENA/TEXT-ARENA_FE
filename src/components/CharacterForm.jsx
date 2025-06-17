@@ -125,18 +125,32 @@ export default function CharacterForm({ onSubmit, userId }) {
             </div>
           )}
 
-          <div className="mt-7 p-4 bg-slate-700/30 rounded-xl border border-slate-600/50 backdrop-blur-sm">
-            <div className="flex items-start gap-3 text-slate-200/90">
-              <span className="text-xl mt-0.5">💡</span>
-              <div className="text-sm leading-relaxed">
-                <p className="font-semibold mb-1.5">AI 분석 팁</p>
-                <p className="opacity-90">
+          {/* --- 개선된 AI 분석 팁 섹션 시작 --- */}
+          <div 
+            className="mt-8 p-5 bg-gradient-to-br from-purple-500/20 via-blue-500/10 to-purple-500/20 backdrop-blur-md rounded-2xl border border-purple-400/30 shadow-lg hover:shadow-purple-500/20 transition-shadow duration-300"
+          >
+            <div className="flex items-start gap-x-4">
+              <div className="flex-shrink-0 mt-0.5 p-2.5 bg-gradient-to-br from-purple-500/60 to-blue-500/60 rounded-full shadow-md hover:shadow-lg transition-shadow duration-300 cursor-default">
+                <span className="text-2xl block">
+                  💡
+                </span>
+              </div>
+              <div className="flex-grow">
+                <p 
+                  className="text-md font-semibold mb-1.5 bg-clip-text text-transparent bg-gradient-to-r from-purple-300 via-pink-300 to-blue-300"
+                >
+                  AI 분석 팁
+                </p>
+                {/* 텍스트 크기 및 줄 간격 수정 */}
+                <p className="text-[13.5px] text-slate-200/80 leading-normal"> 
                   캐릭터 이름과 설명은 AI가 분석하여<br />
                   고유한 능력치를 생성하는 데 사용됩니다!
                 </p>
               </div>
             </div>
           </div>
+          {/* --- AI 분석 팁 섹션 끝 --- */}
+
         </form>
       </div>
     </div>
