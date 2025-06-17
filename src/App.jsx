@@ -17,7 +17,7 @@ export default function App() {
   const fetchCharacters = async (userId, shouldSetPlayer = true) => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/characters/list/${userId}`);
+      const response = await fetch(`http://18.209.30.21:8080/api/characters/list/${userId}`);
       const data = await response.json();
       const charactersArr = Array.isArray(data.result) ? data.result : [];
       console.log('Fetched characters:', charactersArr); // 디버깅을 위한 로그

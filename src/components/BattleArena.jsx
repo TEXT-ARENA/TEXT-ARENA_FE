@@ -74,7 +74,7 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
     const searchInterval = setInterval(() => setSearchTime(prev => prev + 0.1), 100);
     try {
       // 서버에서 상대방 정보 받아오기
-      const res = await fetch(`/api/characters/battle/${currentPlayer.character_id}`);
+      const res = await fetch(`http://18.209.30.21:8080/api/characters/battle/${currentPlayer.character_id}`);
       const data = await res.json();
       clearInterval(searchInterval);
       if (data.isSuccess && Array.isArray(data.result) && data.result[1]) {
@@ -139,7 +139,7 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
   async function fetchEquipments() {
     if (!currentPlayer?.character_id) return;
     try {
-      const res = await fetch(`/api/characters/battle/${currentPlayer.character_id}`);
+      const res = await fetch(`http://18.209.30.21:8080/api/characters/battle/${currentPlayer.character_id}`);
       const data = await res.json();
       console.log("Fetched equipments:", data);
 

@@ -12,7 +12,7 @@ export default function CharacterList({ onSelect, onBack, onCreate, characters, 
     
     try {
       setIsDeleting(character.character_id);
-      const response = await fetch(`/api/characters/${character.character_id}`, {
+      const response = await fetch(`http://18.209.30.21:8080/api/characters/${character.character_id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

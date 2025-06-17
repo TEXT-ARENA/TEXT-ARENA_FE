@@ -46,7 +46,7 @@ export default function LevelUpModal({ level, characterId, onEquip }) {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(`/api/characters/${characterId}/equipments`, {
+      const response = await fetch(`http://18.209.30.21:8080/api/characters/${characterId}/equipments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
