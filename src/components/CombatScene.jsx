@@ -97,26 +97,62 @@ const AnimatedCharacterIcon = ({ character = {}, animation, damageText, isPlayer
       >
         {/* 모자: 몸통 위 */}
         {character.equipments && character.equipments.find(eq => eq.type === 'hat') && (
-          <div className="absolute left-1/2 -translate-x-1/2 -top-7 w-8 h-8 rounded-full bg-gray-300/60 border border-gray-400 flex items-center justify-center text-[10px] text-gray-500 z-20">
-            {character.equipments.find(eq => eq.type === 'hat').name}
+          <div className="absolute left-1/2 -translate-x-1/2 -top-7 w-8 h-8 flex items-center justify-center z-20">
+            {character.equipments.find(eq => eq.type === 'hat').imageUrl ? (
+              <img
+                src={character.equipments.find(eq => eq.type === 'hat').imageUrl}
+                alt={character.equipments.find(eq => eq.type === 'hat').name}
+                className="w-8 h-8 object-contain rounded-full border border-gray-400 bg-white/80"
+                style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
+              />
+            ) : (
+              <span className="text-[10px] text-gray-500 bg-gray-300/60 rounded-full px-2 py-1 border border-gray-400">{character.equipments.find(eq => eq.type === 'hat').name}</span>
+            )}
           </div>
         )}
         {/* 무기: 플레이어는 오른팔 끝, 상대는 왼팔 끝 */}
         {character.equipments && character.equipments.find(eq => eq.type === 'weapon') && (
-          <div className={`absolute ${isPlayer ? 'right-[-18px]' : 'left-[-18px]'} top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-gray-300/60 border border-gray-400 flex items-center justify-center text-[10px] text-gray-500 z-20`}>
-            {character.equipments.find(eq => eq.type === 'weapon').name}
+          <div className={`absolute ${isPlayer ? 'right-[-18px]' : 'left-[-18px]'} top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center z-20`}>
+            {character.equipments.find(eq => eq.type === 'weapon').imageUrl ? (
+              <img
+                src={character.equipments.find(eq => eq.type === 'weapon').imageUrl}
+                alt={character.equipments.find(eq => eq.type === 'weapon').name}
+                className="w-8 h-8 object-contain rounded-lg border border-gray-400 bg-white/80"
+                style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
+              />
+            ) : (
+              <span className="text-[10px] text-gray-500 bg-gray-300/60 rounded-lg px-2 py-1 border border-gray-400">{character.equipments.find(eq => eq.type === 'weapon').name}</span>
+            )}
           </div>
         )}
         {/* 상의: 몸통 중앙 */}
         {character.equipments && character.equipments.find(eq => eq.type === 'top') && (
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-lg bg-gray-300/40 border border-gray-400 flex items-center justify-center text-[10px] text-gray-500 z-10">
-            {character.equipments.find(eq => eq.type === 'top').name}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center z-10">
+            {character.equipments.find(eq => eq.type === 'top').imageUrl ? (
+              <img
+                src={character.equipments.find(eq => eq.type === 'top').imageUrl}
+                alt={character.equipments.find(eq => eq.type === 'top').name}
+                className="w-10 h-10 object-contain rounded-lg border border-gray-400 bg-white/80"
+                style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
+              />
+            ) : (
+              <span className="text-[10px] text-gray-500 bg-gray-300/40 rounded-lg px-2 py-1 border border-gray-400">{character.equipments.find(eq => eq.type === 'top').name}</span>
+            )}
           </div>
         )}
         {/* 신발: 발 아래 */}
         {character.equipments && character.equipments.find(eq => eq.type === 'shoes') && (
-          <div className="absolute left-1/2 -translate-x-1/2 -bottom-7 w-8 h-8 rounded-full bg-gray-300/60 border border-gray-400 flex items-center justify-center text-[10px] text-gray-500 z-20">
-            {character.equipments.find(eq => eq.type === 'shoes').name}
+          <div className="absolute left-1/2 -translate-x-1/2 -bottom-7 w-8 h-8 flex items-center justify-center z-20">
+            {character.equipments.find(eq => eq.type === 'shoes').imageUrl ? (
+              <img
+                src={character.equipments.find(eq => eq.type === 'shoes').imageUrl}
+                alt={character.equipments.find(eq => eq.type === 'shoes').name}
+                className="w-8 h-8 object-contain rounded-full border border-gray-400 bg-white/80"
+                style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
+              />
+            ) : (
+              <span className="text-[10px] text-gray-500 bg-gray-300/60 rounded-full px-2 py-1 border border-gray-400">{character.equipments.find(eq => eq.type === 'shoes').name}</span>
+            )}
           </div>
         )}
         {/* 캐릭터 본체 */}

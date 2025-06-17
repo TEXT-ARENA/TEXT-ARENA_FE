@@ -254,6 +254,8 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
     statKeys.forEach(key => {
       playerWithEquip[key] = (currentPlayer[key] ?? 0) + (bonusSum[key] ?? 0);
     });
+    // 장비 정보 배열 추가
+    playerWithEquip.equipments = Object.values(equipped).filter(Boolean);
     return <CombatSceneWrapper player={playerWithEquip} opponent={opponent} onBattleEnd={handleBattleEnd} />;
   }
 
@@ -417,6 +419,7 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
           <div className="flex justify-between items-center">
             {equipmentTypes.map(({ key, label }) => {
               const isEmpty = !equipped[key];
+              const equip = equipped[key];
               return (
                 <div key={key} className="flex flex-col items-center w-18 relative">
                   <button
@@ -447,14 +450,24 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
                     {isEmpty ? (
                       <span className="inline-block w-10 h-10 rounded-full border-2 border-dashed border-slate-400/60 bg-transparent"></span>
                     ) : (
-                      equipped[key]?.name && 
-                      <span className="text-sm font-bold text-white bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                        [{equipped[key]?.name[0]}]
-                      </span>
+                      equip?.imageUrl ? (
+                        <img
+                          src={equip.imageUrl}
+                          alt={equip.name}
+                          className="w-12 h-12 object-contain rounded-lg shadow"
+                          style={{ background: "#222", borderRadius: "0.75rem" }}
+                        />
+                      ) : (
+                        <span className="text-sm font-bold text-white bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                          [{equip?.name?.[0] || "장"}]
+                        </span>
+                      )
                     )}
                   </button>
-                  <span className="text-xs text-slate-300 mt-2 font-medium">{label}</span>
-                  
+                  {/* 슬롯 아래에 장비 이름(있으면) */}
+                  <span className="text-xs text-slate-300 mt-1 font-medium">
+                    {equip?.name ? equip.name : label}
+                  </span>
                   {/* 비어있는 칸 클릭 메시지 개선 */}
                   {emptyMsg[key] && (
                     <div className="

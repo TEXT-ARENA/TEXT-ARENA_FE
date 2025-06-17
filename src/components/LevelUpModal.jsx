@@ -53,13 +53,23 @@ export default function LevelUpModal({ level, characterId, onEquip }) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          equipmentType: equipType,
+          equipmentType: typeMap[equipType] || equipType,
           equipmentName: name,
           description: desc
         })
       });
       const data = await response.json();
       if (!response.ok) {
+        console.error('장비 생성 실패', {
+          status: response.status,
+          statusText: response.statusText,
+          requestBody: {
+            equipmentType: typeMap[equipType] || equipType,
+            equipmentName: name,
+            description: desc
+          },
+          response: data
+        });
         throw new Error(data.message || '장비 생성에 실패했습니다.');
       }
       if (data.isSuccess) {
@@ -79,6 +89,7 @@ export default function LevelUpModal({ level, characterId, onEquip }) {
         throw new Error(data.message || '장비 생성에 실패했습니다.');
       }
     } catch (err) {
+      console.error('장비 생성 중 예외 발생:', err);
       setError(err.message || '장비 생성 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
