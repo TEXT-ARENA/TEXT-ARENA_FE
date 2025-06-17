@@ -13,6 +13,7 @@ export default function App() {
   const [characters, setCharacters] = useState([]);
   const [loading, setLoading] = useState(false);
   const [newCharacterId, setNewCharacterId] = useState(null);
+  const [thinkingCharacter, setThinkingCharacter] = useState(null);
 
   const fetchCharacters = async (userId, shouldSetPlayer = true) => {
     try {
@@ -22,17 +23,17 @@ export default function App() {
       const charactersArr = Array.isArray(data.result) ? data.result : [];
       console.log('Fetched characters:', charactersArr); // 디버깅을 위한 로그
       const formattedCharacters = charactersArr.map(char => ({
-        character_id: char.characterId,
-        name: char.name,
-        desc: '',
+        ...char, // 모든 필드 보존 (특히 *_reason)
+        character_id: char.characterId ?? char.character_id,
+        userId: userId,
         icon: char.name ? char.name[0] : '?',
+        desc: char.desc ?? '',
         hp: char.hp,
         attack: char.attack,
         defense: char.defense,
         experience: char.exp || 0,
         wins: char.wins ?? 0,
         losses: char.losses ?? 0,
-        userId: userId,
         level: char.level ?? 1,
         exp: char.exp ?? 0,
         maxExp: (char.level && char.level < 6) ? [0, 100, 150, 200, 250, 300][char.level] : 300
@@ -87,6 +88,7 @@ export default function App() {
   }, [characters, user]);
 
   async function handleCreate(character) {
+    setThinkingCharacter(character);
     setStage("thinking");
     if (user?.userId) {
       // 캐릭터 생성 후, 서버에서 최신 목록을 받아옴
@@ -187,8 +189,8 @@ export default function App() {
             </div>
           )}
 
-          {stage === "thinking" && player && (
-            <AIThinkingDialog character={player} onDone={() => setStage("stat")} />
+          {stage === "thinking" && thinkingCharacter && (
+            <AIThinkingDialog character={thinkingCharacter} onDone={() => setStage("stat")} />
           )}
 
           {stage === "stat" && player && (

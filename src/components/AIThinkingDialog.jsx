@@ -18,9 +18,37 @@ export default function AIThinkingDialog({ character, onDone }) {
     console.log('Character data received:', character); // 디버깅을 위한 로그
 
     // character 객체에서 _reason으로 끝나는 모든 키를 찾아서 해당 값들을 배열로 만듭니다
-    let nextReasons = Object.entries(character)
-      .filter(([key, value]) => key.endsWith('_reason') && value)
-      .map(([key, value]) => value);
+    const statOrder = [
+      { key: 'hp', label: '체력' },
+      { key: 'attack', label: '공격력' },
+      { key: 'defense', label: '방어력' },
+      { key: 'criticalChance', label: '치명타 확률' },
+      { key: 'criticalDamage', label: '치명타 피해' },
+      { key: 'speed', label: '속도' },
+      { key: 'dodgeChance', label: '회피 확률' },
+      { key: 'accuracy', label: '명중률' }
+    ];
+    let nextReasons = statOrder.map(({ key, label }) => {
+      // 다양한 케이스 지원: hp_reason, hpReason, hp_reason, hp_Reason 등
+      const snake = key.replace(/[A-Z]/g, m => '_' + m.toLowerCase());
+      const candidates = [
+        `${key}_reason`,
+        `${key}Reason`,
+        `${snake}_reason`,
+        `${snake}Reason`,
+        `${key}_Reason`,
+        `${snake}_Reason`
+      ];
+      let reason = null;
+      for (const cand of candidates) {
+        if (character[cand]) {
+          reason = character[cand];
+          break;
+        }
+      }
+      if (reason) return `${label}: ${reason}`;
+      return null;
+    }).filter(Boolean);
 
     // 만약 reason이라는 키가 있다면(단일 문자열)
     if (nextReasons.length === 0 && character.reason) {

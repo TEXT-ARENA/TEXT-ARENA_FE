@@ -95,6 +95,31 @@ const AnimatedCharacterIcon = ({ character = {}, animation, damageText, isPlayer
         className={`relative w-20 h-20 md:w-24 md:h-24 rounded-full text-white text-4xl md:text-5xl font-semibold flex items-center justify-center shadow-xl transition-all duration-300
                     ${isPlayer ? 'bg-sky-500' : 'bg-red-500'} ${animationClass}`}
       >
+        {/* 모자: 몸통 위 */}
+        {character.equipments && character.equipments.find(eq => eq.type === 'hat') && (
+          <div className="absolute left-1/2 -translate-x-1/2 -top-7 w-8 h-8 rounded-full bg-gray-300/60 border border-gray-400 flex items-center justify-center text-[10px] text-gray-500 z-20">
+            {character.equipments.find(eq => eq.type === 'hat').name}
+          </div>
+        )}
+        {/* 무기: 플레이어는 오른팔 끝, 상대는 왼팔 끝 */}
+        {character.equipments && character.equipments.find(eq => eq.type === 'weapon') && (
+          <div className={`absolute ${isPlayer ? 'right-[-18px]' : 'left-[-18px]'} top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-gray-300/60 border border-gray-400 flex items-center justify-center text-[10px] text-gray-500 z-20`}>
+            {character.equipments.find(eq => eq.type === 'weapon').name}
+          </div>
+        )}
+        {/* 상의: 몸통 중앙 */}
+        {character.equipments && character.equipments.find(eq => eq.type === 'top') && (
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-lg bg-gray-300/40 border border-gray-400 flex items-center justify-center text-[10px] text-gray-500 z-10">
+            {character.equipments.find(eq => eq.type === 'top').name}
+          </div>
+        )}
+        {/* 신발: 발 아래 */}
+        {character.equipments && character.equipments.find(eq => eq.type === 'shoes') && (
+          <div className="absolute left-1/2 -translate-x-1/2 -bottom-7 w-8 h-8 rounded-full bg-gray-300/60 border border-gray-400 flex items-center justify-center text-[10px] text-gray-500 z-20">
+            {character.equipments.find(eq => eq.type === 'shoes').name}
+          </div>
+        )}
+        {/* 캐릭터 본체 */}
         {character.icon || '?'}
         
         {/* 왼팔 */}

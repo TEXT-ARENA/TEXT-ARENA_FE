@@ -30,6 +30,7 @@ export default function LevelUpModal({ level, characterId, onEquip }) {
   const [desc, setDesc] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [bonusReason, setBonusReason] = useState("");
   
   const equipType = equipmentMap[level];
   const equipDisplayName = equipmentDisplayMap[level];
@@ -63,7 +64,13 @@ export default function LevelUpModal({ level, characterId, onEquip }) {
       }
       if (data.isSuccess) {
         console.log('장비 생성 성공:', data.result);
-      
+        // bonusType_reason 추출
+        let bonusReason = data.result.bonusType_reason;
+        if (!bonusReason) {
+          const fallback = ["흠", "고민중", "고민중학교", "뭘로할까"];
+          bonusReason = fallback[Math.floor(Math.random() * fallback.length)];
+        }
+        setBonusReason(bonusReason);
         const newEquipment = data.result.equipments?.find(
           equipment => equipment.type === equipType && equipment.name === name
         );
@@ -153,6 +160,15 @@ export default function LevelUpModal({ level, characterId, onEquip }) {
             )}
           </button>
         </form>
+        {/* bonusType_reason 상상 말풍선 이펙트 */}
+        {bonusReason && (
+          <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 pointer-events-none animate-bonusBalloon">
+            <div className="bg-white text-blue-700 font-bold px-6 py-3 rounded-2xl shadow-xl border-2 border-blue-300 text-lg relative">
+              <span className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-6 bg-white border-l-2 border-b-2 border-blue-300 rotate-45"></span>
+              {bonusReason}
+            </div>
+          </div>
+        )}
         <style>{`
           @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(30px); }
@@ -177,6 +193,15 @@ export default function LevelUpModal({ level, characterId, onEquip }) {
           @keyframes bounce {
             0% { transform: translateY(0); }
             100% { transform: translateY(-8px); }
+          }
+          @keyframes bonusBalloon {
+            0% { opacity: 0; transform: translateY(40px) scale(0.95); }
+            10% { opacity: 1; transform: translateY(0) scale(1); }
+            80% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-40px) scale(0.95); }
+          }
+          .animate-bonusBalloon {
+            animation: bonusBalloon 2.5s cubic-bezier(.36,.07,.19,.97) both;
           }
         `}</style>
       </div>
