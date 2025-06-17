@@ -13,6 +13,7 @@ export default function CharacterForm({ onSubmit, userId }) {
     setIsSubmitting(true);
     try {
       const result = await fetchCharacterFromServer({ name, desc, userId });
+      console.log('캐릭터 생성 결과(result):', result);
       onSubmit(result);
       setName("");
       setDesc("");

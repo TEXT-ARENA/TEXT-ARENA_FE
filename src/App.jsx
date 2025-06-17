@@ -25,13 +25,13 @@ export default function App() {
         character_id: char.characterId,
         name: char.name,
         desc: '',
-        icon: "⚔️",
+        icon: char.name ? char.name[0] : '?',
         hp: char.hp,
         attack: char.attack,
         defense: char.defense,
         experience: char.exp || 0,
-        wins: char.wins || 0,
-        losses: char.losses || 0,
+        wins: char.wins ?? 0,
+        losses: char.losses ?? 0,
         userId: userId
       }));
       setCharacters(formattedCharacters);
@@ -80,15 +80,20 @@ export default function App() {
     }
   }, [characters, user]);
 
-  function handleCreate(character) {
-    setPlayer(character);
-    setNewCharacterId(character.character_id);
+  async function handleCreate(character) {
     setStage("thinking");
-    if (user?.userId && character.character_id) {
-      localStorage.setItem(`lastCharacter_${user.userId}`, character.character_id);
-    }
     if (user?.userId) {
-      fetchCharacters(user.userId, false);
+      // 캐릭터 생성 후, 서버에서 최신 목록을 받아옴
+      const updatedCharacters = await fetchCharacters(user.userId, false);
+      // 방금 만든 캐릭터를 찾음 (이름, 스탯 등으로 매칭)
+      const found = updatedCharacters.find(
+        c => c.name === character.name && c.hp === character.hp && c.attack === character.attack
+      );
+      if (found) {
+        setPlayer(found);
+        setNewCharacterId(found.character_id);
+        localStorage.setItem(`lastCharacter_${user.userId}`, found.character_id);
+      }
     }
   }
 

@@ -24,7 +24,7 @@ export async function fetchCharacterStats({ name, desc, onStream }) {
     // 추가 정보
     name,
     desc,
-    icon: name[0] || "😃",
+    icon: name[0] || "?",
     wins: 0,
     losses: 0
   };
@@ -88,15 +88,21 @@ export async function fetchCharacterFromServer({ name, desc, userId }) {
 }
 
 // 전투 결과를 서버에 전송
-export async function fetchBattleResult({ winnerId, loserId }) {
+export async function fetchBattleResult({ winnerId, loserId, winnerWins, winnerLosses, loserWins, loserLosses }) {
   try {
+    // wins, losses 값이 null/undefined면 0으로 보정
+    const safe = v => (typeof v === 'number' && !isNaN(v) && v >= 0) ? v : 0;
+    const safeWinnerWins = safe(winnerWins);
+    const safeWinnerLosses = safe(winnerLosses);
+    const safeLoserWins = safe(loserWins);
+    const safeLoserLosses = safe(loserLosses);
     const response = await fetch("http://18.209.30.21:8080/api/characters/battle", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Accept": "application/json"
       },
-      body: JSON.stringify({ winnerId, loserId })
+      body: JSON.stringify({ winnerId, loserId, winnerWins: safeWinnerWins, winnerLosses: safeWinnerLosses, loserWins: safeLoserWins, loserLosses: safeLoserLosses })
     });
 
     if (!response.ok) {
@@ -116,6 +122,29 @@ export async function fetchBattleResult({ winnerId, loserId }) {
     return data.result;
   } catch (error) {
     console.error("전투 결과 API 통신 에러:", error);
+    throw error;
+  }
+}
+
+// 캐릭터의 장비 정보를 가져오는 함수 (예시)
+export async function fetchCharacterBattleDetail(characterId) {
+  try {
+    const response = await fetch(`http://18.209.30.21:8080/api/characters/${characterId}/equipments`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      }
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+    const data = await response.json();
+    // 실제 응답 구조에 따라 result 또는 equipments 등으로 수정 필요
+    return data.result || data.equipments || [];
+  } catch (error) {
+    console.error("장비 정보 API 통신 에러:", error);
     throw error;
   }
 }

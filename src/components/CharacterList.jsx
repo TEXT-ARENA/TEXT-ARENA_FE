@@ -53,11 +53,16 @@ export default function CharacterList({ onSelect, onBack, onCreate, characters, 
               <div className="font-bold text-lg flex items-center gap-2">
                 <span>{char.name}</span>
               </div>
-              <div className="text-xs text-slate-400">
-                HP: {char.hp} | 공격: {char.attack} | 방어: {char.defense}
+              <div className="text-xs text-slate-400 flex gap-2 mt-1">
+                <span className="flex items-center gap-1"><span role="img" aria-label="체력">❤️</span> {char.hp}</span>
+                <span className="flex items-center gap-1"><span role="img" aria-label="공격">⚔️</span> {char.attack}</span>
+                <span className="flex items-center gap-1"><span role="img" aria-label="방어">🛡️</span> {char.defense}</span>
               </div>
             </div>
             <div className="flex gap-2 items-center">
+              <div className="text-xs text-right text-slate-300 font-bold mr-2 min-w-[48px]">
+                {char.wins ?? 0}승 {char.losses ?? 0}패
+              </div>
               <button
                 onClick={e => { e.stopPropagation(); onSelect(char); }}
                 className="text-sm bg-sky-600 px-3 py-1 rounded-lg hover:bg-sky-700"

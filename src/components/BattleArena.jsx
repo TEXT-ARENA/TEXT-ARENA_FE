@@ -43,7 +43,7 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
   const [showEquipModal, setShowEquipModal] = useState(null);
   const [showCharacterList, setShowCharacterList] = useState(false);
   const [showCharacterForm, setShowCharacterForm] = useState(false);
-  const [currentPlayer, setCurrentPlayer] = useState({ ...defaultStats, ...player });
+  const [currentPlayer, setCurrentPlayer] = useState({ ...defaultStats, ...player, wins: player?.wins ?? 0, losses: player?.losses ?? 0 });
 
   const [levelUp, setLevelUp] = useState(null);
   const [showStatDialog, setShowStatDialog] = useState(false);
@@ -52,26 +52,43 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
   const [shakeEquip, setShakeEquip] = useState({}); // 장비 흔들림 상태
   const [emptyMsg, setEmptyMsg] = useState({}); // 비어있는 칸 클릭 메시지 상태
 
-  const handleFindOpponent = () => {
+  const handleFindOpponent = async () => {
+    if (!currentPlayer?.character_id) {
+      alert('캐릭터가 정상적으로 생성되지 않았습니다. 다시 시도해 주세요.');
+      return;
+    }
     setMatchmakingPhase("searching");
     setSearchTime(0);
     const searchInterval = setInterval(() => setSearchTime(prev => prev + 0.1), 100);
-    const foundTimer = setTimeout(() => {
+    try {
+      // 서버에서 상대방 정보 받아오기
+      const res = await fetch(`/api/characters/battle/${currentPlayer.character_id}`);
+      const data = await res.json();
       clearInterval(searchInterval);
-      const enemy = {
-        name: "알베르토 드 라 로사",
-        icon: "🗡️",
-        desc: "전직 기사",
-        hp: 180, attack: 80, defense: 18,
-        criticalChance: 0.15, criticalDamage: 1.8,
-        speed: 72, dodgeChance: 0.08, accuracy: 0.92,
-        wins: 127, losses: 89
-      };
-      setOpponent(enemy);
-      setMatchmakingPhase("found");
-      setTimeout(() => setShowCombat(true), 3000);
-    }, Math.random() * 2000 + 2000);
-    return () => { clearInterval(searchInterval); clearTimeout(foundTimer); };
+      if (data.isSuccess && Array.isArray(data.result) && data.result[1]) {
+        // 1번 인덱스가 상대방
+        const opp = data.result[1];
+        const enemy = {
+          character_id: opp.characterId,
+          name: opp.name,
+          icon: opp.name ? opp.name[0] : '?',
+          desc: opp.hp_reason || opp.name,
+          hp: opp.hp, attack: opp.attack, defense: opp.defense,
+          criticalChance: opp.criticalChance, criticalDamage: opp.criticalDamage,
+          speed: opp.speed, dodgeChance: opp.dodgeChance, accuracy: opp.accuracy,
+          wins: opp.wins ?? 0,
+          losses: opp.losses ?? 0
+        };
+        setOpponent(enemy);
+        setMatchmakingPhase("found");
+        setTimeout(() => setShowCombat(true), 2500); // 2.5초 후 전투로 진입
+      } else {
+        setMatchmakingPhase("fail"); // 매칭 실패 안내
+      }
+    } catch (e) {
+      clearInterval(searchInterval);
+      setMatchmakingPhase("fail"); // 매칭 실패 안내
+    }
   };
 
   const handleBattleEnd = (winner, battleResult) => {
@@ -79,27 +96,10 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
     setOpponent(null);
     setMatchmakingPhase("idle");
 
-    setCurrentPlayer(prev => {
-      const updated = { ...prev };
-      if (winner.name === prev.name) {
-        updated.wins += 1;
-        updated.exp += 100;
-      } else {
-        updated.losses += 1;
-        updated.exp += 50;
-      }
-
-      while (updated.level < 5 && updated.exp >= updated.maxExp) {
-        updated.exp -= updated.maxExp;
-        updated.level += 1;
-        updated.maxExp = expNeeded[updated.level];
-
-        setLevelUp(updated.level);
-      }
-      return updated;
-    });
-
     if (onStartCombat) onStartCombat(winner, battleResult);
+    if (typeof onRefreshCharacters === 'function') {
+      onRefreshCharacters();
+    }
   };
 
   useEffect(() => {
@@ -149,7 +149,7 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
       onBack={() => setShowCharacterList(false)}
       onSelect={(char) => {
         onCharacterSelect(char); // 상위 컴포넌트의 핸들러 사용
-        setCurrentPlayer({ ...defaultStats, ...char });
+        setCurrentPlayer({ ...defaultStats, ...char, wins: char?.wins ?? 0, losses: char?.losses ?? 0 });
         setShowCharacterList(false);
       }}
       onCreate={() => {
@@ -280,9 +280,14 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
           <button
             onClick={handleFindOpponent}
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:brightness-110 text-white font-black py-4 px-12 rounded-2xl shadow-xl transition-all duration-200 hover:scale-105"
+            disabled={!currentPlayer?.character_id}
+            style={!currentPlayer?.character_id ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
           >
             🔍 게임 찾기
           </button>
+          {!currentPlayer?.character_id && (
+            <div className="text-red-400 mt-2 text-sm font-bold">캐릭터가 정상적으로 생성되지 않았습니다. 새로고침 후 다시 시도해 주세요.</div>
+          )}
         </div>
       )}
 
@@ -328,7 +333,6 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
             <h2 className="text-2xl font-black mb-2 text-green-300">상대를 찾았습니다!</h2>
             <p className="text-green-200">곧 전투가 시작됩니다</p>
           </div>
-          
           <div className="bg-black/40 rounded-2xl p-6 max-w-md mx-auto mb-6">
             <div className="flex items-center justify-center gap-4 mb-4">
               <div className="text-4xl">{opponent.icon}</div>
@@ -338,7 +342,6 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
                 <p className="text-green-400 text-sm font-bold">{opponent.rank}</p>
               </div>
             </div>
-            
             <div className="grid grid-cols-3 gap-2 text-xs">
               <div className="bg-red-900/50 rounded-lg p-2 text-center">
                 <div className="text-red-300">⚔️</div>
@@ -353,14 +356,25 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
                 <div className="text-white font-bold">{opponent.speed}</div>
               </div>
             </div>
-            
             <div className="mt-4 text-xs text-slate-300">
               전적: {opponent.wins}승 {opponent.losses}패
             </div>
           </div>
-
           <div className="text-green-300 font-mono text-lg animate-pulse">
             🎮 전투 준비 중...
+          </div>
+        </div>
+      )}
+
+      {/* 매칭 실패 안내 */}
+      {matchmakingPhase === "fail" && (
+        <div className="text-center bg-gradient-to-br from-red-900/40 to-orange-900/40 backdrop-blur-xl p-8 rounded-3xl border border-red-500/30 animate-pulse">
+          <div className="mb-6">
+            <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl">
+              <span className="text-3xl">❌</span>
+            </div>
+            <h2 className="text-2xl font-black mb-2 text-red-300">상대를 찾지 못했습니다</h2>
+            <p className="text-red-200">잠시 후 다시 시도해 주세요</p>
           </div>
         </div>
       )}
@@ -403,7 +417,7 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
           characterId={currentPlayer.character_id}
           onEquip={(equipType, newEquipment, updatedCharacter) => {
             setEquipped(prev => ({ ...prev, [equipType]: newEquipment }));
-            setCurrentPlayer(updatedCharacter);
+            setCurrentPlayer({ ...updatedCharacter, wins: updatedCharacter?.wins ?? 0, losses: updatedCharacter?.losses ?? 0 });
             setLevelUp(null);
           }}
           onClose={() => setLevelUp(null)}
@@ -413,7 +427,7 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
           userId={user?.userId}
           onRefreshCharacters={onRefreshCharacters}
           onCharacterSelect={(char) => {
-            setCurrentPlayer({ ...defaultStats, ...char });
+            setCurrentPlayer({ ...defaultStats, ...char, wins: char?.wins ?? 0, losses: char?.losses ?? 0 });
             setShowCharacterList(false);
           }}
           onBack={() => setShowCharacterList(false)}

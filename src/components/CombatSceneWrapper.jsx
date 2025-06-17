@@ -30,6 +30,13 @@ export default function CombatSceneWrapper({ player, opponent, onBattleEnd }) {
     return () => clearTimeout(timer);
   }, [phase]);
 
+  // greeting phase 진입 시마다 showGreeting을 true로 재설정해서 인사 애니메이션이 항상 보이게 함
+  useEffect(() => {
+    if (phase === "greeting") {
+      setShowGreeting(true);
+    }
+  }, [phase]);
+
   const handleBattleComplete = async (winner, resultStats) => {
     setBattleResult({ winner, ...resultStats });
     setPhase("result");
@@ -40,7 +47,14 @@ export default function CombatSceneWrapper({ player, opponent, onBattleEnd }) {
       if (player?.character_id && opponent?.character_id) {
         const winnerId = winner.character_id;
         const loserId = winner.character_id === player.character_id ? opponent.character_id : player.character_id;
-        await fetchBattleResult({ winnerId, loserId });
+        // wins, losses 값 0 보정 (null, undefined, NaN, 문자열 등 모두 0)
+        const safe = v => (typeof v === 'number' && !isNaN(v) && v >= 0) ? v : 0;
+        const safeGet = (obj, key) => safe(obj && obj[key]);
+        const winnerWins = safeGet(winner, 'wins');
+        const winnerLosses = safeGet(winner, 'losses');
+        const loserWins = winner.character_id === player.character_id ? safeGet(opponent, 'wins') : safeGet(player, 'wins');
+        const loserLosses = winner.character_id === player.character_id ? safeGet(opponent, 'losses') : safeGet(player, 'losses');
+        await fetchBattleResult({ winnerId, loserId, winnerWins, winnerLosses, loserWins, loserLosses });
         console.log("전투 결과 서버 전송 성공");
       } else {
         console.warn("character_id가 없어 전투 결과를 서버에 전송하지 않음");
@@ -118,6 +132,42 @@ export default function CombatSceneWrapper({ player, opponent, onBattleEnd }) {
           </button>
         </div>
       )}
+      {/* 애니메이션 효과 스타일 */}
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeInUp { animation: fadeInUp 0.6s ease-out forwards; }
+
+        @keyframes crossFadeInOut {
+          0% { opacity: 0; }
+          30% { opacity: 1; }
+          70% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        .animate-crossFadeInOut { animation: crossFadeInOut 3s ease-in-out forwards; }
+
+        @keyframes crossFadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .animate-crossFadeIn { animation: crossFadeIn 0.8s ease-in-out; }
+
+        @keyframes deepBow {
+          0% { transform: scale(1) translateY(0); }
+          30% { transform: scale(0.95) translateY(16px) rotateX(30deg); }
+          60% { transform: scale(0.97) translateY(10px) rotateX(15deg); }
+          100% { transform: scale(1) translateY(0) rotateX(0); }
+        }
+        .animate-deepBow { animation: deepBow 1s ease-in-out; transform-origin: bottom center; }
+
+        @keyframes pulseVS {
+          0%, 100% { transform: scale(1); opacity: 0.8; }
+          50% { transform: scale(1.15); opacity: 1; }
+        }
+        .animate-pulseVS { animation: pulseVS 1.5s ease-in-out infinite; }
+      `}</style>
     </div>
   );
 }

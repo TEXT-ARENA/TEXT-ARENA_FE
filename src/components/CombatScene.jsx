@@ -32,7 +32,6 @@ const CharacterStatPanel = ({ character = {}, currentHP = 0, isPlayerCharacter, 
         rounded-2xl shadow-xl flex flex-col justify-between
         ${isPlayerCharacter ? 'bg-sky-900/80 border border-sky-700/40' : 'bg-red-900/80 border border-red-700/40'}
       `}
-      style={{ minWidth: '400px' }}
     >
       {/* 이름 + HP */}
       <div className="text-center h-[3.5rem] mb-2">
@@ -159,6 +158,8 @@ const CombatScene = ({ player = {}, opponent = {}, onBattleEnd }) => {
   const [activeTurn, setActiveTurn] = useState(null);
   const [isBattleReady, setIsBattleReady] = useState(false); // New state for battle start delay
 
+  const battleLogDivRef = useRef(null); // battleLog div ref 추가
+
   // Effect for initializing and resetting the battle
   useEffect(() => {
     if (!player.name || !opponent.name) return;
@@ -187,6 +188,16 @@ const CombatScene = ({ player = {}, opponent = {}, onBattleEnd }) => {
 
   }, [player, opponent]);
 
+  // 한글 조사 자동 변환 함수
+  function josa(name, josaStr) {
+    // 받침 유무에 따라 조사 선택 (을/를, 이/가 등)
+    const lastChar = name.charAt(name.length - 1);
+    const uni = lastChar.charCodeAt(0);
+    if (uni < 0xac00 || uni > 0xd7a3) return josaStr.split('/')[1] || josaStr; // 한글이 아니면 두번째
+    const jong = (uni - 0xac00) % 28;
+    return jong === 0 ? josaStr.split('/')[1] : josaStr.split('/')[0];
+  }
+
   // Effect for managing the game loop (turns)
   useEffect(() => {
     // Only run if battle is ready, activeTurn is set, not over, and characters exist
@@ -207,8 +218,8 @@ const CombatScene = ({ player = {}, opponent = {}, onBattleEnd }) => {
     const processTurn = async () => {
       if (battleOverRef.current) return;
 
-      turnStats.current.totalTurns++; 
-      let logEntry = `${currentAttacker.name} attacks ${currentDefender.name}.`;
+      turnStats.current.totalTurns++;
+      let logEntry = `${currentAttacker.name}${josa(currentAttacker.name, '이/가')} ${currentDefender.name}${josa(currentDefender.name, '을/를')} 향해 공격!`;
 
       setPlayerAnimation(null); setOpponentAnimation(null);
       setPlayerDamageText(null); setOpponentDamageText(null);
@@ -225,7 +236,7 @@ const CombatScene = ({ player = {}, opponent = {}, onBattleEnd }) => {
       const effectiveDodge = currentDefender.dodgeChance || 0;   
 
       if (hitRoll > effectiveAccuracy - effectiveDodge) {
-        logEntry += ` ${currentDefender.name} dodges!`;
+        logEntry += ` 하지만 ${currentDefender.name}${josa(currentDefender.name, '이/가')} 재빠르게 회피!`;
         turnStats.current.dodges++;
         if (defenderId === 'player') {
             setPlayerAnimation({ type: 'dodge' });
@@ -255,11 +266,11 @@ const CombatScene = ({ player = {}, opponent = {}, onBattleEnd }) => {
       const isCritical = critRoll < (currentAttacker.criticalChance || 0);
       if (isCritical) {
         damage = Math.round(damage * (currentAttacker.criticalDamage || 1.5));
-        logEntry += ` Critical Hit!`;
+        logEntry += ` 치명타!`; // 한글 치명타
         turnStats.current.criticalHits++;
       }
       turnStats.current.totalDamage += damage;
-      logEntry += ` ${currentDefender.name} takes ${damage} damage.`;
+      logEntry += ` ${currentDefender.name}${josa(currentDefender.name, '이/가')} ${damage}의 데미지를 입었습니다!`;
 
       const damageTextInfo = { amount: damage, isCritical, type: 'damage', key: Date.now() };
       let newDefenderHP;
@@ -315,17 +326,17 @@ const CombatScene = ({ player = {}, opponent = {}, onBattleEnd }) => {
 
     if (playerHP <= 0 && opponentHP <= 0) {
       winner = Math.random() < 0.5 ? player : opponent; 
-      finalLogMessage = "It's a draw! Deciding randomly...";
+      finalLogMessage = "무승부! 심판이 랜덤으로 승자를 결정합니다...";
     } else if (playerHP <= 0) {
       winner = opponent;
-      finalLogMessage = `${opponent.name} wins! ${player.name} is defeated.`;
+      finalLogMessage = `${opponent.name}${josa(opponent.name, '이/가')} 승리! ${player.name}${josa(player.name, '은/는')} 패배했습니다.`;
     } else if (opponentHP <= 0) {
       winner = player;
-      finalLogMessage = `${player.name} wins! ${opponent.name} is defeated.`;
+      finalLogMessage = `${player.name}${josa(player.name, '이/가')} 승리! ${opponent.name}${josa(opponent.name, '은/는')} 패배했습니다.`;
     } else {
       console.warn("endBattle called without a clear KO. This might be an issue or premature call.");
       winner = playerHP > opponentHP ? player : opponentHP > playerHP ? opponent : (Math.random() < 0.5 ? player : opponent);
-      finalLogMessage = `${winner.name} wins by decision (unexpected endBattle call).`;
+      finalLogMessage = `${winner.name}${josa(winner.name, '이/가')} 판정승! (예상치 못한 종료)`;
     }
     
     battleLogRef.current = [...battleLogRef.current, finalLogMessage];
@@ -334,11 +345,22 @@ const CombatScene = ({ player = {}, opponent = {}, onBattleEnd }) => {
     const duration = ((Date.now() - turnStats.current.startTime) / 1000).toFixed(1);
     const reportedTurns = Math.ceil(turnStats.current.totalTurns / 2); 
 
+    // null 방어: winner.wins, player.losses, opponent.losses
+    winner.wins = typeof winner.wins === 'number' && !isNaN(winner.wins) && winner.wins >= 0 ? winner.wins : 0;
+    player.losses = typeof player.losses === 'number' && !isNaN(player.losses) && player.losses >= 0 ? player.losses : 0;
+    opponent.losses = typeof opponent.losses === 'number' && !isNaN(opponent.losses) && opponent.losses >= 0 ? opponent.losses : 0;
+
     setTimeout(() => {
         onBattleEnd(winner, { ...turnStats.current, duration, totalTurns: reportedTurns });
     }, 800); 
   };
 
+  // battleLog가 갱신될 때마다 스크롤을 맨 아래로 이동
+  useEffect(() => {
+    if (battleLogDivRef.current) {
+      battleLogDivRef.current.scrollTop = battleLogDivRef.current.scrollHeight;
+    }
+  }, [battleLog]);
 
   return (
     <div className="w-full max-w-5xl mx-auto flex flex-col items-center gap-4 p-4">
@@ -358,7 +380,10 @@ const CombatScene = ({ player = {}, opponent = {}, onBattleEnd }) => {
         </div>
       </div>
 
-      <div className="w-full max-w-md mt-4 bg-slate-800/50 p-3 rounded-lg h-32 overflow-y-auto text-xs">
+      <div
+        ref={battleLogDivRef}
+        className="w-full max-w-md mt-4 bg-slate-800/50 p-3 rounded-lg h-32 overflow-y-auto text-xs"
+      >
         <h4 className="text-sm font-semibold text-slate-300 mb-2">Battle Log:</h4>
         {battleLog.map((log, index) => (
           <p key={index} className="text-slate-400 leading-tight">{log}</p>

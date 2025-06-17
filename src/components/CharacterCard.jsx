@@ -86,7 +86,7 @@ export default function CharacterCard({ character, isPlayer }) {
             <span className="text-green-200">승 {character.wins ?? 0}</span>
           </div>
           <div className="bg-red-500/20 px-3 py-1 rounded-full border border-red-400/30">
-            <span className="text-red-200">패 {character.loses ?? 0}</span>
+            <span className="text-red-200">패 {character.losses ?? 0}</span>
           </div>
         </div>
       </div>

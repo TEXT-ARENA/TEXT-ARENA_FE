@@ -71,7 +71,7 @@ export default function LevelUpModal({ level, characterId, onEquip }) {
       <div className="absolute inset-0 z-10 pointer-events-none">
         <PartyConfettiEffect />
       </div>
-      <div className="relative bg-gradient-to-br from-white/90 to-blue-100/90 rounded-3xl shadow-2xl border-2 border-purple-300/40 p-8 w-full max-w-2xl min-h-[480px] animate-fadeInUp overflow-visible flex flex-col items-center justify-center z-20">
+      <div className="relative bg-gradient-to-br from-white/90 to-blue-100/90 rounded-3xl shadow-2xl border-2 border-purple-300/40 p-8 w-full max-w-2xl min-h-[480px] animate-fadeInUp overflow-visible flex flex-col items-center justify-center z-20 min-w-[400px]">
         {/* 축하 이펙트 */}
         <ConfettiEffect />
         <div className="absolute -top-8 left-16/30 -translate-x-1/2 flex justify-center pointer-events-none select-none z-20">
