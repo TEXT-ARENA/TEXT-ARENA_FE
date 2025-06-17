@@ -139,18 +139,18 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
   async function fetchEquipments() {
     if (!currentPlayer?.character_id) return;
     try {
-      const res = await fetch(`http://18.209.30.21:8080/api/characters/battle/${currentPlayer.character_id}`);
+      const res = await fetch(`http://18.209.30.21:8080/api/characters/equipments/${currentPlayer.character_id}`);
       const data = await res.json();
       console.log("Fetched equipments:", data);
 
-      if (data.isSuccess && Array.isArray(data.result) && data.result[0]?.equipments) {
+      if (data.isSuccess && Array.isArray(data.result)) {
         // type: weapon, hat, top, shoes
         const eqMap = {};
-        data.result[0].equipments.forEach(eq => {
+        data.result.forEach(eq => {
           eqMap[eq.type] = eq;
         });
         setEquipped(eqMap);
-        setAllEquipments(data.result[0].equipments); // 전체 장비 저장
+        setAllEquipments(data.result); // 전체 장비 저장
       } else {
         setEquipped({});
         setAllEquipments([]);
