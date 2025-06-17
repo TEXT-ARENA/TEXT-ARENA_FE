@@ -107,17 +107,24 @@ export default function AIThinkingDialog({ character, onDone }) {
         {loading ? (
           <div className="animate-pulse text-slate-300">🤔 AI가 생각 중...</div>
         ) : (
-          messages.map((msg, idx) => (
-            <div 
-              key={idx} 
-              style={{
-                animation: 'fadeIn 0.6s ease-out both',
-                animationDelay: `${idx * 0.2}s`
-              }}
-            >
-              🤔 {msg}
-            </div>
-          ))
+          messages
+            .filter((msg, idx, arr) => {
+              if (idx !== arr.length - 1) return true;
+              // 마지막 메시지가 이모지 하나만(예: 🤔) 또는 이모지+공백만일 때 제외
+              if (typeof msg !== 'string') return true;
+              return !/^([\u{1F300}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]|🤔)\s*$/u.test(msg.trim());
+            })
+            .map((msg, idx) => (
+              <div 
+                key={idx} 
+                style={{
+                  animation: 'fadeIn 0.6s ease-out both',
+                  animationDelay: `${idx * 0.2}s`
+                }}
+              >
+                🤔 {msg}
+              </div>
+            ))
         )}
       </div>
       <style>

@@ -270,8 +270,19 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
       </div>
 
       {/* Player Info + Stats */}
-      <div className="bg-white/10 backdrop-blur-xl p-6 rounded-3xl shadow-2xl border border-white/20 mb-6">
-        <div className="flex justify-between items-start mb-4">
+          <div className="
+            bg-gradient-to-br from-white/15 via-white/10 to-white/5 
+            backdrop-blur-2xl border border-white/30 
+            rounded-3xl shadow-2xl shadow-black/20
+            p-6 mb-6 
+            relative overflow-hidden
+            hover:shadow-3xl hover:shadow-black/30 
+            transition-all duration-500
+          ">
+          {/* 배경 글로우 */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 rounded-3xl" />
+          <div className="relative z-10"></div>
+          <div className="flex justify-between items-start mb-4">
           <div>
             <h3 className="text-2xl font-black mb-1">{currentPlayer.name}</h3>
             <span className="text-lg font-medium text-blue-300">{currentPlayer.desc}Lv.{currentPlayer.level}</span>
@@ -294,8 +305,8 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
           </div>
         </div>
 
-        {/* Stat Grid */}
-        <div className="grid grid-cols-4 gap-2 text-xs">
+        {/* Stat Grid - 3D 호버 효과와 글래스모피즘 적용 */}
+        <div className="grid grid-cols-4 gap-3 text-xs">
           {(() => {
             // 장비 보너스 누적 계산
             const statKeys = [
@@ -307,6 +318,17 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
             const statIcons = [
               "❤️", "⚔️", "🛡️", "💨", "💥", "⚡", "🌪️", "🎯"
             ];
+            const statGradients = [
+              "from-red-500/20 to-pink-500/20", // HP
+              "from-orange-500/20 to-red-500/20", // Attack
+              "from-blue-500/20 to-cyan-500/20", // Defense
+              "from-green-500/20 to-emerald-500/20", // Speed
+              "from-yellow-500/20 to-orange-500/20", // Critical Chance
+              "from-purple-500/20 to-pink-500/20", // Critical Damage
+              "from-cyan-500/20 to-blue-500/20", // Dodge
+              "from-indigo-500/20 to-purple-500/20" // Accuracy
+            ];
+            
             // 장비 보너스 합산
             const bonusSum = {};
             statKeys.forEach(key => { bonusSum[key] = 0; });
@@ -318,6 +340,7 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
                 }
               }
             });
+            
             return statKeys.map((key, i) => {
               const base = currentPlayer[key] ?? 0;
               const bonus = bonusSum[key] ?? 0;
@@ -333,16 +356,45 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
                 display = base;
                 if (bonus !== 0) bonusDisplay = <span className="text-green-400 ml-1">(+{bonus})</span>;
               }
+              
               return (
                 <div
                   key={key}
-                  className="bg-black/30 rounded-xl px-2 py-1 flex flex-col items-center justify-center h-20 w-full text-center"
+                  className={`
+                    stat-card group cursor-pointer
+                    bg-gradient-to-br ${statGradients[i]}
+                    backdrop-blur-xl border border-white/30
+                    rounded-2xl px-3 py-4 
+                    flex flex-col items-center justify-center h-24 w-full text-center
+                    transition-all duration-300 ease-out
+                    hover:scale-105 hover:-translate-y-2 hover:shadow-2xl hover:shadow-white/20
+                    hover:border-white/50 hover:backdrop-blur-2xl
+                    relative overflow-hidden
+                  `}
                 >
-                  <div className="text-xl mb-1">{statIcons[i]}</div>
-                  <div className="text-sm font-bold text-white flex items-center justify-center">
-                    {display} {bonusDisplay}
+                  {/* 배경 글로우 효과 */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
+                  
+                  {/* 아이콘 */}
+                  <div className="text-2xl mb-2 transform group-hover:scale-110 transition-transform duration-300 relative z-10">
+                    {statIcons[i]}
                   </div>
-                  <div className="text-[10px] text-slate-400">{statLabels[i]}</div>
+                  
+                  {/* 수치 */}
+                  <div className="text-sm font-bold text-white flex items-center justify-center mb-1 relative z-10">
+                    <span className="group-hover:text-white transition-colors duration-300">
+                      {display}
+                    </span>
+                    {bonusDisplay}
+                  </div>
+                  
+                  {/* 라벨 */}
+                  <div className="text-[10px] text-slate-300 group-hover:text-slate-200 transition-colors duration-300 relative z-10">
+                    {statLabels[i]}
+                  </div>
+                  
+                  {/* 호버 시 나타나는 광택 효과 */}
+                  <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
                 </div>
               );
             });
@@ -351,44 +403,81 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
       </div>
 
       {/* Equipment Panel */}
-      <div className="bg-white/10 backdrop-blur-xl p-4 rounded-2xl border border-white/20 mb-6">
-        <div className="flex justify-between items-center">
-          {equipmentTypes.map(({ key, label }) => {
-            const isEmpty = !equipped[key];
-            return (
-              <div key={key} className="flex flex-col items-center w-16 relative">
-                <button
-                  onClick={() => {
-                    if (isEmpty) {
-                      handleEmptyEquipClick(key);
-                    } else {
-                      setShowEquipModal(key);
-                    }
-                  }}
-                  className={`w-16 h-16 rounded-xl border border-white/30 transition-all duration-200 shadow-xl flex items-center justify-center text-xl
-                    bg-slate-800 hover:bg-slate-700
-                    ${isEmpty ? `empty-equip ${shakeEquip[key] ? 'animate-equip-shake border-red-500 bg-red-900/40' : ''}` : ''}`}
-                  style={{ cursor: 'pointer' }}
-                  aria-label={label + (isEmpty ? ' 비어있음' : '')}
-                >
-                  {isEmpty ? (
-                    <span className="inline-block w-8 h-8 rounded-full border-2 border-dashed border-slate-500 bg-transparent"></span>
-                  ) : (
-                    equipped[key]?.name && <span className="ml-1 text-xs text-slate-400">[{equipped[key]?.name[0]}]</span>
+      <div className="
+        bg-gradient-to-br from-white/12 via-white/8 to-white/4
+        backdrop-blur-2xl border border-white/25
+        rounded-3xl shadow-xl shadow-black/10
+        p-6 mb-6
+        relative
+      ">
+        {/* 배경 패턴 */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/3 via-purple-500/3 to-pink-500/3 rounded-3xl" />
+        
+        <div className="relative z-10">
+          <div className="flex justify-between items-center">
+            {equipmentTypes.map(({ key, label }) => {
+              const isEmpty = !equipped[key];
+              return (
+                <div key={key} className="flex flex-col items-center w-18 relative">
+                  <button
+                    onClick={() => {
+                      if (isEmpty) {
+                        handleEmptyEquipClick(key);
+                      } else {
+                        setShowEquipModal(key);
+                      }
+                    }}
+                    className={`
+                      w-18 h-18 rounded-2xl 
+                      border border-white/40 
+                      transition-all duration-300 ease-out
+                      shadow-lg flex items-center justify-center text-xl
+                      backdrop-blur-xl
+                      hover:scale-110 hover:-translate-y-1 hover:shadow-2xl hover:shadow-white/20
+                      ${isEmpty ? 
+                        `bg-gradient-to-br from-slate-800/60 to-slate-900/60 hover:from-slate-700/60 hover:to-slate-800/60
+                        ${shakeEquip[key] ? 'animate-equip-shake border-red-500/80 bg-gradient-to-br from-red-900/60 to-red-800/60' : ''}` 
+                        : 
+                        'bg-gradient-to-br from-blue-500/20 to-purple-500/20 hover:from-blue-400/30 hover:to-purple-400/30'
+                      }
+                    `}
+                    style={{ cursor: 'pointer' }}
+                    aria-label={label + (isEmpty ? ' 비어있음' : '')}
+                  >
+                    {isEmpty ? (
+                      <span className="inline-block w-10 h-10 rounded-full border-2 border-dashed border-slate-400/60 bg-transparent"></span>
+                    ) : (
+                      equipped[key]?.name && 
+                      <span className="text-sm font-bold text-white bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                        [{equipped[key]?.name[0]}]
+                      </span>
+                    )}
+                  </button>
+                  <span className="text-xs text-slate-300 mt-2 font-medium">{label}</span>
+                  
+                  {/* 비어있는 칸 클릭 메시지 개선 */}
+                  {emptyMsg[key] && (
+                    <div className="
+                      absolute left-1/2 -translate-x-1/2 top-20 
+                      animate-equip-msg
+                      bg-gradient-to-r from-red-500/95 to-pink-500/95 
+                      backdrop-blur-xl border border-red-300/50
+                      text-white text-xs font-bold 
+                      px-4 py-2 rounded-2xl 
+                      shadow-xl shadow-red-500/30
+                      pointer-events-none select-none z-30 
+                      w-max whitespace-nowrap
+                    ">
+                      ⚠️ {label}{label === '신발' ? '이' : '가'} 없습니다!
+                    </div>
                   )}
-                </button>
-                <span className="text-[10px] text-slate-300 mt-1">{label}</span>
-                {/* 비어있는 칸 클릭 메시지 */}
-                {emptyMsg[key] && (
-                  <div className="absolute left-1/2 -translate-x-1/2 top-20 animate-equip-msg bg-red-500/90 text-white text-xs font-bold px-3 py-1 rounded-xl shadow-lg pointer-events-none select-none z-20 w-max whitespace-nowrap">
-                    ⚠️ {label}{label === '신발' ? '이' : '가'} 없습니다!
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
+
 
       {/* Idle State */}
       {matchmakingPhase === "idle" && (
@@ -584,27 +673,81 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
       <style>{`
         @keyframes equip-shake {
           0% { transform: translateX(0); }
-          15% { transform: translateX(-6px); }
-          30% { transform: translateX(6px); }
-          45% { transform: translateX(-6px); }
-          60% { transform: translateX(6px); }
-          75% { transform: translateX(-4px); }
-          100% { transform: translateX(0); }
+          15% { transform: translateX(-8px) scale(1.02); }
+          30% { transform: translateX(8px) scale(1.02); }
+          45% { transform: translateX(-8px) scale(1.02); }
+          60% { transform: translateX(8px) scale(1.02); }
+          75% { transform: translateX(-4px) scale(1.01); }
+          100% { transform: translateX(0) scale(1); }
         }
         .animate-equip-shake {
           animation: equip-shake 0.6s cubic-bezier(.36,.07,.19,.97) both;
         }
-        .empty-equip {
-          border-style: dashed !important;
-        }
+        
         @keyframes equip-msg {
-          0% { opacity: 0; transform: translateY(20px) scale(0.95); }
-          20% { opacity: 1; transform: translateY(0) scale(1); }
-          80% { opacity: 1; transform: translateY(0) scale(1); }
-          100% { opacity: 0; transform: translateY(-20px) scale(0.95); }
+          0% {
+            opacity: 0;
+            transform: translateY(20px) scale(0.8);
+          }
+          15% {
+            opacity: 1;
+            transform: translateY(0) scale(1.05);
+          }
+          20% {
+            transform: translateY(-2px) scale(1);
+          }
+          25% {
+            opacity: 1;
+            transform: scale(1);
+          }
+          /* 쇽 위로 올라가는 부분 */
+          35% {
+            opacity: 1;
+            transform: translateY(-25px) scale(.9);
+            filter: blur(0px);
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(10px) scale(0.1);
+            filter: blur(4px);
+          }
         }
         .animate-equip-msg {
-          animation: equip-msg 1.5s cubic-bezier(.36,.07,.19,.97) both;
+          animation: equip-msg 1.8s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        
+        /* 글래스모피즘 효과 강화 */
+        .stat-card::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+          border-radius: 1rem;
+          pointer-events: none;
+        }
+        
+        /* 3D 그림자 효과 */
+        .stat-card:hover {
+          box-shadow: 
+            0 20px 40px rgba(0,0,0,0.3),
+            0 15px 25px rgba(255,255,255,0.1),
+            inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+        
+        /* 미세한 애니메이션 개선 */
+        .stat-card {
+          transform-style: preserve-3d;
+        }
+        
+        .stat-card:hover {
+          transform: 
+            translateY(-8px) 
+            scale(1.05) 
+            rotateX(5deg) 
+            rotateY(5deg);
         }
       `}</style>
     </div>
