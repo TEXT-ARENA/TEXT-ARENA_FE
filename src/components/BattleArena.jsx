@@ -68,14 +68,31 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
       if (data.isSuccess && Array.isArray(data.result) && data.result[1]) {
         // 1번 인덱스가 상대방
         const opp = data.result[1];
+        // 상대방 장비 보정 적용
+        let oppStats = { ...opp };
+        if (Array.isArray(opp.equipments)) {
+          const statKeys = [
+            "hp", "attack", "defense", "speed", "criticalChance", "criticalDamage", "dodgeChance", "accuracy"
+          ];
+          const bonusSum = {};
+          statKeys.forEach(key => { bonusSum[key] = 0; });
+          opp.equipments.forEach(eq => {
+            if (eq && eq.bonusType && eq.bonusValue !== undefined && bonusSum.hasOwnProperty(eq.bonusType)) {
+              bonusSum[eq.bonusType] += Number(eq.bonusValue) || 0;
+            }
+          });
+          statKeys.forEach(key => {
+            oppStats[key] = (opp[key] ?? 0) + (bonusSum[key] ?? 0);
+          });
+        }
         const enemy = {
           character_id: opp.characterId,
           name: opp.name,
           icon: opp.name ? opp.name[0] : '?',
           desc: opp.hp_reason || opp.name,
-          hp: opp.hp, attack: opp.attack, defense: opp.defense,
-          criticalChance: opp.criticalChance, criticalDamage: opp.criticalDamage,
-          speed: opp.speed, dodgeChance: opp.dodgeChance, accuracy: opp.accuracy,
+          hp: oppStats.hp, attack: oppStats.attack, defense: oppStats.defense,
+          criticalChance: oppStats.criticalChance, criticalDamage: oppStats.criticalDamage,
+          speed: oppStats.speed, dodgeChance: oppStats.dodgeChance, accuracy: oppStats.accuracy,
           wins: opp.wins ?? 0,
           losses: opp.losses ?? 0
         };
@@ -102,34 +119,62 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
     }
   };
 
-  useEffect(() => {
-    // 캐릭터가 바뀔 때마다 장비 정보 불러오기
-    async function fetchEquipments() {
-      if (!currentPlayer?.character_id) return;
-      try {
-        const res = await fetch(`/api/characters/battle/${currentPlayer.character_id}`);
-        const data = await res.json();
-        console.log("Fetched equipments:", data);
+  // 캐릭터가 바뀔 때마다 장비 정보 불러오기
+  async function fetchEquipments() {
+    if (!currentPlayer?.character_id) return;
+    try {
+      const res = await fetch(`/api/characters/battle/${currentPlayer.character_id}`);
+      const data = await res.json();
+      console.log("Fetched equipments:", data);
 
-        if (data.isSuccess && Array.isArray(data.result) && data.result[0]?.equipments) {
-          // type: weapon, hat, top, shoes
-          const eqMap = {};
-          data.result[0].equipments.forEach(eq => {
-            eqMap[eq.type] = eq;
-          });
-          setEquipped(eqMap);
-          setAllEquipments(data.result[0].equipments); // 전체 장비 저장
-        } else {
-          setEquipped({});
-          setAllEquipments([]);
-        }
-      } catch (e) {
+      if (data.isSuccess && Array.isArray(data.result) && data.result[0]?.equipments) {
+        // type: weapon, hat, top, shoes
+        const eqMap = {};
+        data.result[0].equipments.forEach(eq => {
+          eqMap[eq.type] = eq;
+        });
+        setEquipped(eqMap);
+        setAllEquipments(data.result[0].equipments); // 전체 장비 저장
+      } else {
         setEquipped({});
         setAllEquipments([]);
       }
+    } catch (e) {
+      setEquipped({});
+      setAllEquipments([]);
     }
+  }
+  useEffect(() => {
     fetchEquipments();
   }, [currentPlayer?.character_id]);
+
+  // currentPlayer의 level, exp, maxExp가 캐릭터 정보와 연동되도록 보정
+  useEffect(() => {
+    if (!player) return;
+    setCurrentPlayer(prev => ({
+      ...defaultStats,
+      ...player,
+      wins: player?.wins ?? 0,
+      losses: player?.losses ?? 0,
+      level: player?.level ?? 1,
+      exp: player?.exp ?? 0,
+      maxExp: player?.maxExp ?? 100
+    }));
+  }, [player]);
+
+  // 레벨별 장비 미보유 시 LevelUpModal 자동 표시
+  useEffect(() => {
+    if (!currentPlayer || !allEquipments) return;
+    if (currentPlayer.level === 2 && allEquipments.filter(eq => eq.type === 'weapon').length === 0) {
+      setLevelUp(2);
+    } else if (currentPlayer.level === 3 && allEquipments.filter(eq => eq.type === 'hat').length === 0) {
+      setLevelUp(3);
+    } else if (currentPlayer.level === 4 && allEquipments.filter(eq => eq.type === 'top').length === 0) {
+      setLevelUp(4);
+    } else if (currentPlayer.level === 5 && allEquipments.filter(eq => eq.type === 'shoes').length === 0) {
+      setLevelUp(5);
+    }
+  }, [currentPlayer.level, allEquipments]);
 
   // 흔들림 애니메이션 트리거 함수
   const handleEmptyEquipClick = (key) => {
@@ -163,7 +208,22 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
   }
 
   if (showCombat && opponent) {
-    return <CombatSceneWrapper player={currentPlayer} opponent={opponent} onBattleEnd={handleBattleEnd} />;
+    // 장비 보정값을 합산한 실제 전투용 플레이어 객체 생성
+    const statKeys = [
+      "hp", "attack", "defense", "speed", "criticalChance", "criticalDamage", "dodgeChance", "accuracy"
+    ];
+    const bonusSum = {};
+    statKeys.forEach(key => { bonusSum[key] = 0; });
+    Object.values(equipped).forEach(eq => {
+      if (eq && eq.bonusType && eq.bonusValue !== undefined && bonusSum.hasOwnProperty(eq.bonusType)) {
+        bonusSum[eq.bonusType] += Number(eq.bonusValue) || 0;
+      }
+    });
+    const playerWithEquip = { ...currentPlayer };
+    statKeys.forEach(key => {
+      playerWithEquip[key] = (currentPlayer[key] ?? 0) + (bonusSum[key] ?? 0);
+    });
+    return <CombatSceneWrapper player={playerWithEquip} opponent={opponent} onBattleEnd={handleBattleEnd} />;
   }
 
   return (
@@ -205,25 +265,52 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
 
         {/* Stat Grid */}
         <div className="grid grid-cols-4 gap-2 text-xs">
-          {[
-            { icon: "❤️", label: "체력", value: currentPlayer.hp },
-            { icon: "⚔️", label: "공격", value: currentPlayer.attack },
-            { icon: "🛡️", label: "방어", value: currentPlayer.defense },
-            { icon: "💨", label: "속도", value: currentPlayer.speed },
-            { icon: "💥", label: "치명타", value: `${Math.round(currentPlayer.criticalChance * 100)}%` },
-            { icon: "⚡", label: "치명피해", value: `${currentPlayer.criticalDamage}x` },
-            { icon: "🌪️", label: "회피", value: `${Math.round(currentPlayer.dodgeChance * 100)}%` },
-            { icon: "🎯", label: "정확도", value: `${Math.round(currentPlayer.accuracy * 100)}%` },
-          ].map((stat, i) => (
-            <div
-              key={i}
-              className="bg-black/30 rounded-xl px-2 py-1 flex flex-col items-center justify-center h-20 w-full text-center"
-            >
-              <div className="text-xl mb-1">{stat.icon}</div>
-              <div className="text-sm font-bold text-white">{stat.value}</div>
-              <div className="text-[10px] text-slate-400">{stat.label}</div>
-            </div>
-          ))}
+          {(() => {
+            // 장비 보너스 누적 계산
+            const statKeys = [
+              "hp", "attack", "defense", "speed", "criticalChance", "criticalDamage", "dodgeChance", "accuracy"
+            ];
+            const statLabels = [
+              "체력", "공격", "방어", "속도", "치명타", "치명피해", "회피", "정확도"
+            ];
+            const statIcons = [
+              "❤️", "⚔️", "🛡️", "💨", "💥", "⚡", "🌪️", "🎯"
+            ];
+            // 장비 보너스 합산
+            const bonusSum = {};
+            statKeys.forEach(key => { bonusSum[key] = 0; });
+            Object.values(equipped).forEach(eq => {
+              if (eq && eq.bonusType && eq.bonusValue !== undefined && bonusSum.hasOwnProperty(eq.bonusType)) {
+                bonusSum[eq.bonusType] += Number(eq.bonusValue) || 0;
+              }
+            });
+            return statKeys.map((key, i) => {
+              const base = currentPlayer[key] ?? 0;
+              const bonus = bonusSum[key] ?? 0;
+              let display;
+              if (key === "criticalChance" || key === "dodgeChance" || key === "accuracy") {
+                // %로 표기
+                display = `${Math.round(base * 100)}%`;
+                if (bonus !== 0) display += ` (+${Math.round(bonus * 100)}%)`;
+              } else if (key === "criticalDamage") {
+                display = `${base}x`;
+                if (bonus !== 0) display += ` (+${bonus}x)`;
+              } else {
+                display = base;
+                if (bonus !== 0) display += ` (+${bonus})`;
+              }
+              return (
+                <div
+                  key={key}
+                  className="bg-black/30 rounded-xl px-2 py-1 flex flex-col items-center justify-center h-20 w-full text-center"
+                >
+                  <div className="text-xl mb-1">{statIcons[i]}</div>
+                  <div className="text-sm font-bold text-white">{display}</div>
+                  <div className="text-[10px] text-slate-400">{statLabels[i]}</div>
+                </div>
+              );
+            });
+          })()}
         </div>
       </div>
 
@@ -415,8 +502,9 @@ export default function BattleArena({ player, onStartCombat, characters, onChara
         <LevelUpModal
           level={levelUp}
           characterId={currentPlayer.character_id}
-          onEquip={(equipType, newEquipment, updatedCharacter) => {
-            setEquipped(prev => ({ ...prev, [equipType]: newEquipment }));
+          onEquip={async (equipType, newEquipment, updatedCharacter) => {
+            // 장비 생성 후 최신 장비 목록을 반드시 다시 불러옴
+            await fetchEquipments();
             setCurrentPlayer({ ...updatedCharacter, wins: updatedCharacter?.wins ?? 0, losses: updatedCharacter?.losses ?? 0 });
             setLevelUp(null);
           }}

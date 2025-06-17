@@ -32,7 +32,10 @@ export default function App() {
         experience: char.exp || 0,
         wins: char.wins ?? 0,
         losses: char.losses ?? 0,
-        userId: userId
+        userId: userId,
+        level: char.level ?? 1,
+        exp: char.exp ?? 0,
+        maxExp: (char.level && char.level < 6) ? [0, 100, 150, 200, 250, 300][char.level] : 300
       }));
       setCharacters(formattedCharacters);
       const lastUsedId = localStorage.getItem(`lastCharacter_${userId}`);

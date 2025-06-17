@@ -17,6 +17,14 @@ const equipmentDisplayMap = {
   5: "신발",
 };
 
+// 한글-영문 장비 타입 매핑
+const typeMap = {
+  '무기': 'weapon',
+  '모자': 'hat',
+  '상의': 'top',
+  '신발': 'shoes'
+};
+
 export default function LevelUpModal({ level, characterId, onEquip }) {
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
@@ -25,6 +33,12 @@ export default function LevelUpModal({ level, characterId, onEquip }) {
   
   const equipType = equipmentMap[level];
   const equipDisplayName = equipmentDisplayMap[level];
+
+  // onEquip 호출 시 한글 타입을 영문 타입으로 변환해서 전달
+  const handleEquip = async (selectedType, ...rest) => {
+    const apiType = typeMap[selectedType] || selectedType;
+    await onEquip(apiType, ...rest);
+  };
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -53,7 +67,7 @@ export default function LevelUpModal({ level, characterId, onEquip }) {
         const newEquipment = data.result.equipments?.find(
           equipment => equipment.type === equipType && equipment.name === name
         );
-        onEquip(equipType, newEquipment || { name, type: equipType }, data.result);
+        handleEquip(equipType, newEquipment || { name, type: equipType }, data.result);
       } else {
         throw new Error(data.message || '장비 생성에 실패했습니다.');
       }
