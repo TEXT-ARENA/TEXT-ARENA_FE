@@ -116,6 +116,7 @@ export default function LevelUpModal({ level, characterId, onEquip }) {
               disabled={loading || !equipType}
               maxLength={12}
             />
+            <div className="text-right text-xs text-slate-400">{name.length} / 12자</div>
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-xs font-bold text-slate-600 ml-1">장비 설명</label>
@@ -129,6 +130,7 @@ export default function LevelUpModal({ level, characterId, onEquip }) {
               disabled={loading || !equipType}
               maxLength={30}
             />
+            <div className="text-right text-xs text-slate-400">{desc.length} / 30자</div>
           </div>
           <button
             type="submit"

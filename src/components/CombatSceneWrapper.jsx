@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import CombatScene from "./CombatScene";
 import { fetchBattleResult } from "../api/aiPrompt";
 
-const GREETINGS = ["안녕", "안녕하세요", "좋은 하루", "하이", "맞짱떠요", "무서워요", "집에 가고 싶다"];
+const GREETINGS = ["안녕", "안녕하세요", "좋은 하루", "하이", "맞짱떠요", "무서워요", "집에 가고 싶다", "한판해요", "너무 좋아요", "흠"];
 
 export default function CombatSceneWrapper({ player, opponent, onBattleEnd }) {
   const [phase, setPhase] = useState("loading");

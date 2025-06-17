@@ -49,6 +49,8 @@ export default function App() {
         }
         setPlayer(selectedCharacter);
         localStorage.setItem(`lastCharacter_${userId}`, selectedCharacter.character_id);
+      } else if (shouldSetPlayer) {
+        setPlayer(null);
       }
       return formattedCharacters;
     } catch (error) {
@@ -80,6 +82,7 @@ export default function App() {
       }
     } else {
       setStage('form');
+      setPlayer(null);
     }
   }, [characters, user]);
 
@@ -205,14 +208,16 @@ export default function App() {
 
           {stage === "battle" && player && (
             <div className="transform transition-all duration-500 animate-fadeIn w-full">
-              <BattleArena 
-                player={player} 
+              <BattleArena
+                player={player}
+                onStartCombat={() => setStage("battle")}
                 characters={characters}
                 onCharacterSelect={handleCharacterSelect}
                 onRefreshCharacters={() => fetchCharacters(user.userId)}
                 user={user}
                 onCreateCharacter={handleCreate}
-                onRequestCreateCharacter={() => setStage('form')}
+                onRequestCreateCharacter={() => setStage("form")}
+                fetchCharacters={fetchCharacters}
               />
             </div>
           )}
